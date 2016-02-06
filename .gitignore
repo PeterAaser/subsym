@@ -1,0 +1,7 @@
+*.log
+*.class
+target
+*.MF
+*.so
+*.java
+project
