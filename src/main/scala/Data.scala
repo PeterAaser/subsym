@@ -6,7 +6,10 @@ import Scalaz._
 
 object Data {
 
-    trait Gene
+    trait Gene {
+        def +-(g2: Gene, start: Int, end: Int): (Gene, Gene)
+    }
+
     trait Chromosome
 
     trait Genotype[Gene] {
@@ -33,10 +36,34 @@ object Data {
         def ^(g1: Gene): Gene
     }
 
+    // case class BitGene(bits: Vector[Int]) extends Gene {
+
+    //     def +-(g2: BitGene, start: Int, end: Int): (BitGene, BitGene) = {
+
+    //         val c1 = (bits take start) ++
+    //             (g2.bits view (start, end)) ++
+    //             (bits takeRight end)
+
+    //         val c2 = (g2.bits take start) ++
+    //             (bits view (start, end)) ++
+    //             (g2.bits takeRight end)
+
+    //         (BitGene(c1), BitGene(c2))
+    //     }
+    // }
+
     case class BitGene(bits: Vector[Int]) extends Gene {
-        def +-(other: BitGene, first: Int, last: Int): BitGene = {
-            this 
+        def +-(g: Gene, start: Int, end: Int): (BitGene, BitGene) = g match {
+            case g2: BitGene =>
+                val c1 = (bits take start) ++
+                    (g2.bits view (start, end)) ++
+                    (bits takeRight end)
+
+                val c2 = (g2.bits take start) ++
+                    (bits view (start, end)) ++
+                    (g2.bits takeRight end)
+
+                (BitGene(c1), BitGene(c2))
         }
     }
-
 }

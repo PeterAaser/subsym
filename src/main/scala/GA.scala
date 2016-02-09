@@ -22,9 +22,11 @@ object GAsolver {
         val vec_a_kodon = vec_a view (slice_start, slice_end)
         lazy val vec_a_rest = vec_a takeRight slice_end 
 
-        println(vec_a_init ++ vec_a_kodon ++ vec_a_rest)
-        println(vec_a_kodon.toVector)
-        println(vec_a_rest)
+        val test = (vec_a take slice_start) ++ 
+            (vec_b view (slice_start, slice_end)) ++ 
+            (vec_a takeRight slice_end)
+
+        println(test)
 
 
         val next_a = Vector(1, 0, 0, 2, 2, 2, 1, 1, 0)
