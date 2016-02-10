@@ -7,18 +7,23 @@ import Scalaz._
 object Data {
 
     trait Gene[A] {
-        def +-(g1: A, g2: A, start: Int, end: Int): (A, A)
+        def +-(g1: A, g2: A): (A, A)
+        def ~(g1: A): A
     }
 
     implicit class GeneOps[A](a: A)(implicit ev: Gene[A]) {
-        def +-(g2: A, start: Int, end: Int): (A, A) = ev.+-(a, g2, start, end)
+        def +-(g2: A): (A, A) = ev.+-(a, g2)
+        def ~(): A = ev.~(a)
     }
 
 
     case class BitGene(bits: Vector[Int])
     object BitGene {
         implicit val bitGene = new Gene[BitGene] {
-            def +-(g1: BitGene, g2: BitGene, start: Int, end: Int): (BitGene, BitGene) = {
+            def +-(g1: BitGene, g2: BitGene): (BitGene, BitGene) = {
+
+                val start = 1
+                val end = 2
 
                 val c1 = (g1.bits take start) ++
                     (g2.bits view (start, end)) ++
@@ -30,57 +35,38 @@ object Data {
 
                 (BitGene(c1), BitGene(c2))
             }
+
+            def ~(g1: BitGene): BitGene = {
+                g1.copy(g1.bits.updated(1, math.abs(g1.bits(1) - 1)))
+            }
         }
     }
 
 
-    // case class BitGene(bits: Vector[Int]) extends Gene {
+    trait Chromosome
 
-    //     def +-(g2: BitGene, start: Int, end: Int): (BitGene, BitGene) = {
-
-    //     }
-    // }
-
-    // case class BitGene(bits: Vector[Int]) extends Gene {
-    //     def +-(g: Gene, start: Int, end: Int): (BitGene, BitGene) = g match {
-    //         case g2: BitGene =>
-    //             val c1 = (bits take start) ++
-    //                 (g2.bits view (start, end)) ++
-    //                 (bits takeRight end)
-
-    //             val c2 = (g2.bits take start) ++
-    //                 (bits view (start, end)) ++
-    //                 (g2.bits takeRight end)
-
-    //             (BitGene(c1), BitGene(c2))
-    //     }
-    // }
-
-    // trait Chromosome
-
-    // trait Genotype[Gene] {
-    //     val genes: List[Gene]
-    //     def toPhenotype: Phenotype
-    // }
+    trait Genotype[Gene] {
+        val genes: List[Gene]
+        def toPhenotype: Phenotype
+    }
 
 
-    // trait Phenotype {
-    //     def evaluate: Double
-    // }
+    trait Phenotype {
+        def evaluate: Double
+    }
 
 
-    // case class Population(
-    //     adults: List[Phenotype], 
-    //     genotypes: List[Genotype[Gene]]
-    // )
+    case class Population[A <: Gene[A]](
+        adults: List[Phenotype], 
+        genotypes: List[Genotype[A]]
+    )
 
-    // trait Config
+    trait Config
 
-    // trait GAproblem {
-    //     def config: Config
-    //     def +-(g1: Gene, g2: Gene): Gene
-    //     def ^(g1: Gene): Gene
-    // }
-
+    trait GAproblem[A <: Gene[A]] {
+        def config: Config
+        def +-(g1: A, g2: A): A
+        def ^(g1: A): A
+    }
 
 }
