@@ -16,7 +16,6 @@ object Data {
         def ~(): A = ev.~(a)
     }
 
-
     case class BitGene(bits: Vector[Int])
     object BitGene {
         implicit val bitGene = new Gene[BitGene] {
@@ -43,11 +42,26 @@ object Data {
     }
 
 
-    trait Chromosome
+    trait Genome[A] {
+        def +-(g1: A, g2: A): (A, A)
+    }
+
+    implicit class GenomeOps[A](a: A)(implicit ev: Genome[A]) {
+        def +-(): (A) = ev.+-(a)
+    }
+
+    case class BitGenome(g: List[BitGene])
+    object SingleBitGenome {
+        implicit val singleBitGenome = new Genome[BitGenome] {
+            def +-(
+        }
+
+    }
+
 
     trait Genotype[Gene] {
-        val genes: List[Gene]
-        def toPhenotype: Phenotype
+        val gene: Gene
+        def evaluate
     }
 
 
