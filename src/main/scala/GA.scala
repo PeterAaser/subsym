@@ -1,11 +1,11 @@
 package GA
 
 import scala._
-import Data._
-import Durp._
-
 import scalaz._
 import Scalaz._
+
+import Data._
+import Common._
 
 object GAsolver {
 
@@ -18,6 +18,6 @@ object GAsolver {
 
 object OneMax {
 
-    
+    val muh_gene = BitGene(Vector(1, 2, 3))    
 
 }
