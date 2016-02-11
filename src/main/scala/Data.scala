@@ -30,33 +30,39 @@ object Data {
         def ~(): A = ev.~(a)
     }
 
-    trait Phenotype
+    trait Phenotype[A] {
+        def genome: Genome[A]
+    }
 
-    trait Config {
-        def childSel: Seq[Phenotype] => Seq[Phenotype]
-        def adultSel: (Seq[Phenotype], Seq[Phenotype]) => Seq[Phenotype]
-        def parentSel: Seq[Phenotype] => Seq[Phenotype]
+    trait Config[A] {
+        def childSel: Seq[Phenotype[A]] => Seq[Phenotype[A]]
+        def adultSel: (Seq[Phenotype[A]], Seq[Phenotype[A]]) => Seq[Phenotype[A]]
+        def parentSel: Seq[Phenotype[A]] => Seq[Phenotype[A]]
     }
 
     case class Population[A](
         val genotypes: Seq[Genome[A]],
-        val adults: Seq[Phenotype],
-        val >=< : Genome[A] => Phenotype,
-        val eval: Phenotype => Double,
-        val config: Config 
-    ){
-        def growChildren: Seq[Phenotype] =
+        val adults: Seq[Phenotype[A]],
+        val >=< : Genome[A] => Phenotype[A],
+        val eval: Phenotype[A] => Double,
+        val config: Config[A] 
+    )
+    {
+        def growChildren: Seq[Phenotype[A]] =
             genotypes map >=<
 
-        def selectChildren(children: Seq[Phenotype]): Seq[Phenotype] =
+        def selectChildren(children: Seq[Phenotype[A]]): Seq[Phenotype[A]] =
             config.childSel(children)
 
-        def selectAdults(children: Seq[Phenotype], adults: Seq[Phenotype]): Seq[Phenotype] =
+        def selectAdults(children: Seq[Phenotype[A]], adults: Seq[Phenotype[A]]): Seq[Phenotype[A]] =
             config.adultSel(children, adults)
 
-        def selectParents(adults: Seq[Phenotype]): Seq[Phenotype] =
+        def selectParents(adults: Seq[Phenotype[A]]): Seq[Phenotype[A]] =
             config.parentSel(adults)
 
+        def nextGeneration(parents: Seq[Phenotype[A]]): Population[A] = {
+            ???
+        }
     }
 
 
