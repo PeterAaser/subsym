@@ -35,18 +35,19 @@ object Representations {
     }
 
 
-    case class SingleBitGenome(gene: BitGene, f: SingleBitGenome => Double){
+    case class SingleBitGenome(gene: BitGene) extends Genome[SingleBitGenome] {
+
         def cross(genome2: SingleBitGenome): (SingleBitGenome, SingleBitGenome) = {
             val (gene1, gene2) = gene.cross(genome2.gene)
-            (SingleBitGenome(gene1, f), SingleBitGenome(gene2, genome2.f))
+            (SingleBitGenome(gene), SingleBitGenome(gene2))
         }
 
-        def mutate(gn1: SingleBitGenome): SingleBitGenome =
-            gn1.copy(gene = gene.mutate)
+        def mutate: SingleBitGenome =
+            copy(gene = gene.mutate)
     }
 }
 
-// All selection is expected to be done on sorted lists
+
 object Selection {
 
     // Scales a population of candidates using some function that can be tailored to populations
@@ -101,6 +102,7 @@ object Selection {
     }
 
 
+    // creates random samples and matches them when it feels like it, else selects a random specimen
     def tournamentSelection[A <: Genome[A]](
         candidates: IndexedSeq[Phenotype[A]], 
         winners: Int, epsilon: Double, contestants: Int)
@@ -145,10 +147,5 @@ object Selection {
 }
 
 object ParentSelection {
-
-    def fitnessProportionate = ???
-    def sigmaScaling = ???
-    def tournament = ???
-    def roulette = ???
 
 }

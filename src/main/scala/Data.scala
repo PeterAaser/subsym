@@ -5,7 +5,6 @@ import scalaz._
 import Scalaz._
 
 import Data._
-import Operations._
 
 object Data {
 
@@ -20,38 +19,40 @@ object Data {
         def mutate: A
     }
 
-    case class Phenotype[A <: Genome[A]](genome: Genome[A], relativeFitness: Double, fitness: Double, age: Int)
+    case class Phenotype[A <: Genome[A]](
+        genome: Genome[A], 
+        fitness: Double, 
+        age: Int
+    )
 
-    trait geneOps[A <: Genome[A]] {
-        def childSel: Seq[Phenotype[A]] => Seq[Phenotype[A]]
-        def adultSel: (Seq[Phenotype[A]], Seq[Phenotype[A]]) => Seq[Phenotype[A]]
-        def parentSel: Seq[Phenotype[A]] => Seq[Phenotype[A]]
-        def grow: Genome[A] => Phenotype[A]
-    }
 
-    case class Population[A <: Genome[A]](
-        val genotypes: Seq[Genome[A]],
-        val adults: Seq[Phenotype[A]],
-        val config: geneOps[A]){
+    case class geneOps[A <: Genome[A]]( 
+        initPop: Int => IndexedSeq[A],
+        grow: A => Phenotype[A],
+        childSel: IndexedSeq[Phenotype[A]] => IndexedSeq[Phenotype[A]],
+        adultSel: (IndexedSeq[Phenotype[A]], IndexedSeq[Phenotype[A]]) => IndexedSeq[Phenotype[A]],
+        parentSel: IndexedSeq[Phenotype[A]] => IndexedSeq[Phenotype[A]]
+    )
 
-            def growChildren: Seq[Phenotype[A]] =
-                genotypes.map(config.grow(_))
+    // case class Population[A <: Genome[A]](
+    //     val genotypes: IndexedSeq[Genome[A]],
+    //     val adults: IndexedSeq[Phenotype[A]],
+    //     val config: geneOps[A]){
 
-            def selectChildren(children: Seq[Phenotype[A]]): Seq[Phenotype[A]] =
-                config.childSel(children)
+    //         def growChildren: IndexedSeq[Phenotype[A]] =
+    //             genotypes.map(config.grow(_))
 
-            def selectAdults(children: Seq[Phenotype[A]], adults: Seq[Phenotype[A]]): Seq[Phenotype[A]] =
-                config.adultSel(children, adults)
+    //         def selectChildren(children: IndexedSeq[Phenotype[A]]): IndexedSeq[Phenotype[A]] =
+    //             config.childSel(children)
 
-            def selectParents(adults: Seq[Phenotype[A]]): Seq[Phenotype[A]] =
-                config.parentSel(adults)
+    //         def selectAdults(children: IndexedSeq[Phenotype[A]], adults: IndexedSeq[Phenotype[A]]): IndexedSeq[Phenotype[A]] =
+    //             config.adultSel(children, adults)
 
-            def nextGeneration(parents: Seq[Phenotype[A]]): Population[A] = {
-                copy(genotypes = parents.map(_.genome))
-            }
-    }
-}
+    //         def selectParents(adults: IndexedSeq[Phenotype[A]]): IndexedSeq[Phenotype[A]] =
+    //             config.parentSel(adults)
 
-object Operations {
-
+    //         def nextGeneration(parents: IndexedSeq[Phenotype[A]]): Population[A] = {
+    //             copy(genotypes = parents.map(_.genome))
+    //         }
+    // }
 }
