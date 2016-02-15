@@ -13,8 +13,12 @@ object GAsolver {
 
     def main(args: Array[String]): Unit = {
 
-        val om = initializeGenome(10)
-        // println(om)
+        val uh = OneMax.population
+        val ah = uh.growChildren
+
+        println(uh)
+        println(ah)
+        
 
     }
 }
@@ -56,16 +60,16 @@ object OneMax {
     
 
     val conf = geneOps[SingleBitGenome](
-        initializeGenome,
+        // initializeGenome,
         oneMaxPhenotype,
         selectChildren,
         selectAdults,
         selectParents
     )
-
     
-
-    // val pop = Population[SingleBitGenome](
-
-
+    val population = Population[SingleBitGenome](
+        initializeGenome(20),
+        Vector[Phenotype[SingleBitGenome]](),
+        conf
+    )
 }
