@@ -4,49 +4,151 @@ import scala._
 import scalaz._
 import Scalaz._
 
+import scala.util.Random
+
 import Data._
 
-object Common {
+object Representations {
 
+    // TODO more intelligent selection.
+    case class BitGene(bits: Vector[Int]) extends Gene[BitGene] {
+        def cross(g2: BitGene): (BitGene, BitGene) = {
 
-    case class BitGene(bits: Vector[Int])
-    object BitGene {
-        implicit val bitGene = new Gene[BitGene] {
-            def +-(g1: BitGene, g2: BitGene): (BitGene, BitGene) = {
+            val start = Random.nextInt(bits.length - 2)
+            val end = start + 1
 
-                val start = 1
-                val end = 2
+            val c1 = (bits take start) ++
+                (g2.bits view (start, end)) ++
+                (bits takeRight end)
 
-                val c1 = (g1.bits take start) ++
-                    (g2.bits view (start, end)) ++
-                    (g1.bits takeRight end)
+            val c2 = (g2.bits take start) ++
+                (bits view (start, end)) ++
+                (g2.bits takeRight end)
 
-                val c2 = (g2.bits take start) ++
-                    (g1.bits view (start, end)) ++
-                    (g2.bits takeRight end)
+            (BitGene(c1), BitGene(c2))
+        }
 
-                (BitGene(c1), BitGene(c2))
-            }
-
-            def ~(g1: BitGene): BitGene = {
-                g1.copy(g1.bits.updated(1, math.abs(g1.bits(1) - 1)))
-            }
+        def mutate: BitGene = {
+            val point = Random.nextInt(bits.length - 1)
+            copy(bits.updated(point, math.abs(bits(point) - point)))
         }
     }
 
 
-
-
-    case class SingleBitGenome(g: BitGene)
-    object BitGenome {
-        implicit val singleBitGenome = new Genome[SingleBitGenome] {
-            def +-(gn1: SingleBitGenome, gn2: SingleBitGenome): (SingleBitGenome, SingleBitGenome) ={
-                val (g1, g2) = gn1.g +- gn2.g
-                (SingleBitGenome(g1), SingleBitGenome(g2))
-            }
-            def ~(gn1: SingleBitGenome): SingleBitGenome =
-                gn1.copy(g = gn1.g.~)
+    case class SingleBitGenome(gene: BitGene, f: SingleBitGenome => Double){
+        def cross(genome2: SingleBitGenome): (SingleBitGenome, SingleBitGenome) = {
+            val (gene1, gene2) = gene.cross(genome2.gene)
+            (SingleBitGenome(gene1, f), SingleBitGenome(gene2, genome2.f))
         }
+
+        def mutate(gn1: SingleBitGenome): SingleBitGenome =
+            gn1.copy(gene = gene.mutate)
     }
+}
+
+// All selection is expected to be done on sorted lists
+object Selection {
+
+    // Scales a population of candidates using some function that can be tailored to populations
+    def scale[A <: Genome[A]](
+        candidates: IndexedSeq[Phenotype[A]], 
+        scaler: IndexedSeq[Phenotype[A]] => (Double => Double))
+    : IndexedSeq[Phenotype[A]] = {
+
+            val scalingFun = scaler(candidates)
+            candidates.map(c => c.copy(fitness=scalingFun(c.fitness)))
+        }
+
+
+    // creates a fitness normalizing function from a list of candidates
+    def normalizer[A <: Genome[A]](candidates: IndexedSeq[Phenotype[A]])
+    : IndexedSeq[Phenotype[A]] => (Double => Double) = {
+
+        val fittest = candidates.reduceLeft( (l, r) => if (l.fitness > r.fitness) l else r)
+        candidates => (fitness => fitness/(fittest.fitness))
+    }
+
+
+    // creates a roulette scaled, normalized list of candidates
+    def rouletteScaler[A <: Genome[A]](candidates: IndexedSeq[Phenotype[A]])
+    : IndexedSeq[Phenotype[A]] = {
+
+        val fitnessSum = (0.0 /: candidates.map(_.fitness))(_+_)
+
+        def stackingSum(ps: IndexedSeq[Phenotype[A]], stack: Double): IndexedSeq[Phenotype[A]] = ps match {
+            case h +: t => h.copy( fitness = (h.fitness + stack)/fitnessSum) +: stackingSum(t, stack + h.fitness)
+            case _ => Vector[Phenotype[A]]()
+        }
+        stackingSum(candidates, 0.0)
+    }
+
+    // Roulette selection expects a roulette scaled population
+    def roulettSelection[A <: Genome[A]](
+        candidates: IndexedSeq[Phenotype[A]], 
+        spins: Int)
+    : IndexedSeq[Phenotype[A]] = {
+
+        def search(low: Int, high: Int, target: Double): Phenotype[A] = {
+            if (low == high)
+                candidates(low) 
+            else (low + high)/2 match {
+                case mid if candidates(mid).fitness > target => search(low, mid, target)
+                case mid if candidates(mid).fitness < target => search(mid, high, target)
+                case _ => candidates(low)
+            }
+        }
+        Vector.fill(spins)(search(0, candidates.size, Random.nextDouble))
+    }
+
+
+    def tournamentSelection[A <: Genome[A]](
+        candidates: IndexedSeq[Phenotype[A]], 
+        winners: Int, epsilon: Double, contestants: Int)
+    : IndexedSeq[Phenotype[A]] = {
+
+        def select(remaining: Int): IndexedSeq[Phenotype[A]] = {
+            if (remaining < 1){ IndexedSeq[Phenotype[A]]() }
+            else{
+                if(Random.nextDouble > epsilon)
+                    candidates(Random.nextInt(candidates.size - 1)) +:
+                    tournamentSelection(candidates, winners - 1, epsilon, contestants)
+                
+                else
+                    tournament(candidates, contestants) +:
+                    tournamentSelection(candidates, winners - 1, epsilon, contestants)
+            }
+        }
+
+        def tournament[A <: Genome[A]](
+            candidates: IndexedSeq[Phenotype[A]], 
+            contestants: Int
+        ): Phenotype[A] = {
+
+            // https://stackoverflow.com/questions/14862602/scala-java-generating-a-set-of-non-repeating-random-numbers
+            def sample[A](items: List[A], sampleSize: Int) = {
+                def collect(vect: Vector[A], sampleSize: Int, acc: List[A]): List[A] = {
+                    if(sampleSize == 0) acc
+                    else {
+                        val index = Random.nextInt(vect.size)
+                        collect( vect.updated(index, vect(0)) tail, sampleSize - 1, vect(index) :: acc)
+                    }
+                }
+                collect(items toVector, sampleSize, Nil)
+            }
+
+            val chosen = sample(0 to candidates.size - 1 toList, contestants).map(candidates(_))
+            chosen.reduceLeft( (l, r) => if (l.fitness > r.fitness) l else r)
+        }
+
+        select(winners)
+    }
+}
+
+object ParentSelection {
+
+    def fitnessProportionate = ???
+    def sigmaScaling = ???
+    def tournament = ???
+    def roulette = ???
 
 }
