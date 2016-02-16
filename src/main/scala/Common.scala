@@ -17,20 +17,22 @@ object Representations {
             val start = Random.nextInt(bits.length - 2)
             val end = start + 1
 
+            println("Crossing at %d ".format(start))
+
             val c1 = (bits take start) ++
-                (g2.bits view (start, end)) ++
-                (bits takeRight end)
+                (g2.bits slice (start, end)) ++
+                (bits takeRight (bits.length - end))
 
             val c2 = (g2.bits take start) ++
-                (bits view (start, end)) ++
-                (g2.bits takeRight end)
+                (bits slice (start, end)) ++
+                (g2.bits takeRight (bits.length - end))
 
             (BitGene(c1), BitGene(c2))
         }
 
         def mutate: BitGene = {
             val point = Random.nextInt(bits.length - 1)
-            copy(bits.updated(point, math.abs(bits(point) - point)))
+            copy(bits.updated(point, math.abs(bits(point) - 1)))
         }
     }
 
@@ -39,7 +41,7 @@ object Representations {
 
         def cross(genome2: SingleBitGenome): (SingleBitGenome, SingleBitGenome) = {
             val (gene1, gene2) = gene.cross(genome2.gene)
-            (SingleBitGenome(gene), SingleBitGenome(gene2))
+            (SingleBitGenome(gene1), SingleBitGenome(gene2))
         }
 
         def mutate: SingleBitGenome =

@@ -27,7 +27,6 @@ object Data {
 
 
     case class geneOps[A <: Genome[A]]( 
-        // initPop: Int => IndexedSeq[A],
         grow: A => Phenotype[A],
         childSel: IndexedSeq[Phenotype[A]] => IndexedSeq[Phenotype[A]],
         adultSel: (IndexedSeq[Phenotype[A]], IndexedSeq[Phenotype[A]]) => IndexedSeq[Phenotype[A]],
