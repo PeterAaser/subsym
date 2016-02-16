@@ -93,17 +93,20 @@ object OneMax {
     def selectParents(adults: Pop): Pop =
         adults
     
+    def makeChildren(parents: Pop): Vector[SingleBitGenome] = ???
 
     val conf = geneOps[SingleBitGenome](
         oneMaxPhenotype,
         selectChildren,
         selectAdults,
-        selectParents
+        selectParents,
+        makeChildren
     )
-    
-    val population = Population[SingleBitGenome](
-        initializeGenome(20),
-        Vector[Phenotype[SingleBitGenome]](),
-        conf
-    )
+
+    // 
+    // val population = Population[SingleBitGenome](
+    //     initializeGenome(20),
+    //     Vector[Phenotype[SingleBitGenome]](),
+    //     conf
+    // )
 }

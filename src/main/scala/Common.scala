@@ -5,6 +5,7 @@ import scalaz._
 import Scalaz._
 
 import scala.util.Random
+import scala.language.postfixOps
 
 import Data._
 
@@ -42,8 +43,12 @@ object Representations {
             (SingleBitGenome(gene1), SingleBitGenome(gene2))
         }
 
-        def mutate: SingleBitGenome =
-            copy(gene = gene.mutate)
+        def mutate(rate: Double): SingleBitGenome = {
+            if (Random.nextDouble < rate){
+                copy(gene = gene.mutate)
+            }
+            else this
+        }
     }
 }
 
@@ -150,21 +155,40 @@ object Selection {
 
 
 // Common strategies for including children into adult pools
-object ChildSelection {
+object Reproduction {
 
     def full[A <: Genome[A]](
         children: IndexedSeq[Phenotype[A]], 
         adults: IndexedSeq[Phenotype[A]]
     ): IndexedSeq[Phenotype[A]] = children
 
-    def mixin[A <: Genome[A]](
-        children: IndexedSeq[Phenotype[A]], 
-        adults: IndexedSeq[Phenotype[A]]
-    ): IndexedSeq[Phenotype[A]] = children
+        
+    def asexual[A <: Genome[A]](p: Phenotype[A], mutationRate: Double): Genome[A] = {
+        p.genome.mutate(mutationRate)
+    }
 
-    def over[A <: Genome[A]](
-        children: IndexedSeq[Phenotype[A]], 
-        adults: IndexedSeq[Phenotype[A]]
-    ): IndexedSeq[Phenotype[A]] = children
 
+    // As if this isnt gonna explode in my face
+    def sexual[A <: Genome[A]](p1: Phenotype[A], p2: Phenotype[A], mutationRate: Double): (Genome[A], Genome[A]) = {
+        val iSuckAtScala = p2.genome match { case s: A => s }
+        val children = p1.genome.cross(iSuckAtScala)
+        // (children._1.mutate(mutationRate), children._2.mutate(mutationRate))
+        ???
+    }
+
+    def sexualReproduction[A <: Genome[A]](mutationRate: Double): (IndexedSeq[Phenotype[A]] => IndexedSeq[Genome[A]]) = {
+        def reproduce(parents: IndexedSeq[Phenotype[A]]): IndexedSeq[Genome[A]] = {
+            parents match {
+                case p1 +: p2 +: t => 
+                    val children = sexual(p1, p2, mutationRate)
+                    children._1 +: children._2 +: reproduce(t)
+                case _ => Vector[Genome[A]]()
+            }
+        }
+        parents => reproduce(parents)
+    }
+
+    def asexualReproduction[A <: Genome[A]](mutationRate: Double): (IndexedSeq[Phenotype[A]] => IndexedSeq[Genome[A]]) = {
+        parents => parents.map(asexual(_, mutationRate))
+    }
 }

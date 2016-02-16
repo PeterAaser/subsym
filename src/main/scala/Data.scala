@@ -16,7 +16,7 @@ object Data {
 
     trait Genome[A <: Genome[A]] {
         def cross(gn2: A): (A, A)
-        def mutate: A
+        def mutate(rate: Double): A
     }
 
     case class Phenotype[A <: Genome[A]](
@@ -28,9 +28,14 @@ object Data {
 
     case class geneOps[A <: Genome[A]]( 
         grow: A => Phenotype[A],
+
+        // Weed out unfit children
         childSel: IndexedSeq[Phenotype[A]] => IndexedSeq[Phenotype[A]],
+
+        // Select new adult pool
         adultSel: (IndexedSeq[Phenotype[A]], IndexedSeq[Phenotype[A]]) => IndexedSeq[Phenotype[A]],
-        parentSel: IndexedSeq[Phenotype[A]] => IndexedSeq[Phenotype[A]]
+        parentSel: IndexedSeq[Phenotype[A]] => IndexedSeq[Phenotype[A]],
+        makeChildren: IndexedSeq[Phenotype[A]] => IndexedSeq[A]
     )
 
     case class Population[A <: Genome[A]](
@@ -38,32 +43,30 @@ object Data {
         val adults: IndexedSeq[Phenotype[A]],
         val config: geneOps[A]
     ){
-        // def growChildren: IndexedSeq[Phenotype[A]] =
-        //     genotypes.map(g => config.grow(g))
-
-        // def selectChildren(children: IndexedSeq[Phenotype[A]]): IndexedSeq[Phenotype[A]] =
-        //     config.childSel(children)
-
-        // def selectAdults(children: IndexedSeq[Phenotype[A]], adults: IndexedSeq[Phenotype[A]]): IndexedSeq[Phenotype[A]] =
-        //     config.adultSel(children, adults)
-
-        // def selectParents(adults: IndexedSeq[Phenotype[A]]): IndexedSeq[Phenotype[A]] =
-        //     config.parentSel(adults)
-
-        // def nextGeneration(parents: IndexedSeq[Phenotype[A]]): Population[A] = {
-        //     // val unf =  copy(genotypes = parents.map(_.genome))
-        //     this
-        // }
 
         override def toString: String = {
             "Population --- \n" +
             genotypes.foreach(println(_))
         }
     }
+
     case object Population {
 
-        def growChildren[A <: Genome[A]](p: Population[A]): Population[A] = {
-            p.copy(adults = p.genotypes.map(g => p.config.grow(g)))
+        def nextAdultPool[A <: Genome[A]](p: Population[A]): Population[A] = {
+            val children = p.config.childSel(p.genotypes.map(g => p.config.grow(g)))
+            val adults = p.config.adultSel(children, p.adults)
+            p.copy(adults = adults)
+        }
+
+        def createChildren[A <: Genome[A]](p: Population[A]): Population[A] = {
+            val parents = p.config.parentSel(p.adults)
+            val children = p.config.makeChildren(parents)
+            p.copy(genotypes = children)
+        }
+
+        def cycle[A <: Genome[A]](p: Population[A]): Population[A] = {
+            val p1 = nextAdultPool(p)
+            createChildren(p1)
         }
 
     }
