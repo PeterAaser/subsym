@@ -17,8 +17,6 @@ object Representations {
             val start = Random.nextInt(bits.length - 2)
             val end = start + 1
 
-            println("Crossing at %d ".format(start))
-
             val c1 = (bits take start) ++
                 (g2.bits slice (start, end)) ++
                 (bits takeRight (bits.length - end))
@@ -63,7 +61,8 @@ object Selection {
         }
 
 
-    // creates a fitness normalizing function from a list of candidates
+    // creates a fitness normalizing function from a list of candidates such that the highest has
+    // fitness 1.0
     def normalizer[A <: Genome[A]](candidates: IndexedSeq[Phenotype[A]])
     : IndexedSeq[Phenotype[A]] => (Double => Double) = {
 
@@ -86,13 +85,14 @@ object Selection {
     }
 
     // Roulette selection expects a roulette scaled population
-    def roulettSelection[A <: Genome[A]](
+    def rouletteSelection[A <: Genome[A]](
         candidates: IndexedSeq[Phenotype[A]], 
         spins: Int)
     : IndexedSeq[Phenotype[A]] = {
 
+        // hastily clobbered together
         def search(low: Int, high: Int, target: Double): Phenotype[A] = {
-            if (low == high)
+            if (low == high || high - low == 1)
                 candidates(low) 
             else (low + high)/2 match {
                 case mid if candidates(mid).fitness > target => search(low, mid, target)
@@ -148,6 +148,23 @@ object Selection {
     }
 }
 
-object ParentSelection {
+
+// Common strategies for including children into adult pools
+object ChildSelection {
+
+    def full[A <: Genome[A]](
+        children: IndexedSeq[Phenotype[A]], 
+        adults: IndexedSeq[Phenotype[A]]
+    ): IndexedSeq[Phenotype[A]] = children
+
+    def mixin[A <: Genome[A]](
+        children: IndexedSeq[Phenotype[A]], 
+        adults: IndexedSeq[Phenotype[A]]
+    ): IndexedSeq[Phenotype[A]] = children
+
+    def over[A <: Genome[A]](
+        children: IndexedSeq[Phenotype[A]], 
+        adults: IndexedSeq[Phenotype[A]]
+    ): IndexedSeq[Phenotype[A]] = children
 
 }

@@ -36,23 +36,37 @@ object Data {
     case class Population[A <: Genome[A]](
         val genotypes: IndexedSeq[A],
         val adults: IndexedSeq[Phenotype[A]],
-        val config: geneOps[A]){
+        val config: geneOps[A]
+    ){
+        // def growChildren: IndexedSeq[Phenotype[A]] =
+        //     genotypes.map(g => config.grow(g))
 
-            def growChildren: IndexedSeq[Phenotype[A]] =
-                genotypes.map(g => config.grow(g))
+        // def selectChildren(children: IndexedSeq[Phenotype[A]]): IndexedSeq[Phenotype[A]] =
+        //     config.childSel(children)
 
-            def selectChildren(children: IndexedSeq[Phenotype[A]]): IndexedSeq[Phenotype[A]] =
-                config.childSel(children)
+        // def selectAdults(children: IndexedSeq[Phenotype[A]], adults: IndexedSeq[Phenotype[A]]): IndexedSeq[Phenotype[A]] =
+        //     config.adultSel(children, adults)
 
-            def selectAdults(children: IndexedSeq[Phenotype[A]], adults: IndexedSeq[Phenotype[A]]): IndexedSeq[Phenotype[A]] =
-                config.adultSel(children, adults)
+        // def selectParents(adults: IndexedSeq[Phenotype[A]]): IndexedSeq[Phenotype[A]] =
+        //     config.parentSel(adults)
 
-            def selectParents(adults: IndexedSeq[Phenotype[A]]): IndexedSeq[Phenotype[A]] =
-                config.parentSel(adults)
+        // def nextGeneration(parents: IndexedSeq[Phenotype[A]]): Population[A] = {
+        //     // val unf =  copy(genotypes = parents.map(_.genome))
+        //     this
+        // }
 
-            def nextGeneration(parents: IndexedSeq[Phenotype[A]]): Population[A] = {
-                // val unf =  copy(genotypes = parents.map(_.genome))
-                this
-            }
+        override def toString: String = {
+            "Population --- \n" +
+            genotypes.foreach(println(_))
+        }
     }
+    case object Population {
+
+        def growChildren[A <: Genome[A]](p: Population[A]): Population[A] = {
+            p.copy(adults = p.genotypes.map(g => p.config.grow(g)))
+        }
+
+    }
+
+
 }

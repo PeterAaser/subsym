@@ -21,22 +21,39 @@ object GAsolver {
 
     def main(args: Array[String]): Unit = {
 
-        val test1 = OneMax.population
-        val test2 = test1.growChildren
-        val test3 = normalizer(test2)
-        val test4 = test3(test2)
-        
+        def printList(s: Seq[_]): Unit = {
+            println("-----------")
+            s.foreach(println(_))
+            println()
+        }
 
-        val test5 = test2.head.genome
-        val test7 = test2(2).genome match { case s: SingleBitGenome => s }
+        // val test1 = OneMax.population
+        // val test2 = growChildren(test1)
+        // val test3 = normalizer(test2)
+        // val test4 = test3(test2)
 
-        println((test5, test7))
-        val test8 = test2.head.genome.cross(test7)
-        println(test8)
-        val test9 = test8._1
-        println(test9)
-        val test10 = test9.mutate
-        println(test10)
+        // val normTest = scale(test2, test3)
+        // printList(test2)
+        // printList(normTest)
+
+        // val rouletteTest = rouletteScaler(normTest)
+        // printList(rouletteTest)
+
+        // val selected = rouletteSelection(rouletteTest, 2)
+        // printList(selected)
+
+        // val test5 = test2.head.genome
+        // val test7 = test2(2).genome match { case s: SingleBitGenome => s }
+        // // println((test5, test7))
+
+        // val test8 = test2.head.genome.cross(test7)
+        // // println(test8)
+
+        // val test9 = test8._1
+        // // println(test9)
+
+        // val test10 = test9.mutate
+        // // println(test10)
 
     }
 }
@@ -54,7 +71,7 @@ object OneMax {
     val evaluate: (SingleBitGenome => Double) =
         genome => {
             val sum = (0 /: genome.gene.bits)(_+_)
-            sum.toDouble/(genome.gene.bits.size - 1).toDouble
+            sum.toDouble
         }
 
     def initializeGenome(size: Int): Vector[SingleBitGenome] =
