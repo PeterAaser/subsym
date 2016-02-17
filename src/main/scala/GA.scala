@@ -34,11 +34,36 @@ object GAsolver {
         var testPop = OneMax.population
         println(testPop)
 
-        testPop = Data.Population.cycle(testPop)
+        testPop = Data.Population.nextAdultPool(testPop)
         println(testPop)
 
-        testPop = Data.Population.cycle(testPop)
-        println(testPop)
+        // testPop = Data.Population.cycle(testPop)
+        // println(testPop)
+
+        var adults = testPop.adults
+        printList(adults)
+        println( (0.0 /: adults.map(_.fitness))(_+_) )
+
+        val normalizer = Scaling.normalizer(adults)
+        println(normalizer.colonType)
+
+        val scaled = Scaling.scale(adults, normalizer)
+        printList(scaled)
+
+        val rScaled = Scaling.rouletteScaler(adults)
+        printList(rScaled)
+
+        val parents = ParentSelection.rouletteSelection(rScaled, rScaled.length)
+        printList(parents)
+
+        def refit(p: Phenotype[SingleBitGenome]) : Phenotype[SingleBitGenome] =
+            p.copy(fitness = OneMax.oneMaxPhenotype(p.genome).fitness)
+
+        val nParents = parents.map(refit(_))
+        println( (0.0 /: nParents.map(_.fitness))(_+_) )
+        printList(nParents)
+        
+
 
     }
 }
@@ -72,8 +97,13 @@ object OneMax {
     def selectAdults(children: Phenos, adults: Phenos): Phenos =
         children
     
-    def selectParents(adults: Phenos): Phenos =
-        adults
+    def selectParents(adults: Phenos): Phenos = {
+        val normalizer = Scaling.normalizer(adults)
+        val scaled = Scaling.scale(adults, normalizer)
+        val rScaled = Scaling.rouletteScaler(adults)
+        ParentSelection.rouletteSelection(rScaled, rScaled.length)
+        // adults
+    }
 
     def makeChildren(adults: Phenos): Vector[SingleBitGenome] =
         sexualReproduction(0.1)(adults).toVector

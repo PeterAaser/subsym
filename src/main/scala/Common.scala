@@ -110,10 +110,14 @@ object ParentSelection {
         spins: Int)
     : IndexedSeq[Phenotype[A]] = {
 
+
         // hastily clobbered together
         def search(low: Int, high: Int, target: Double): Phenotype[A] = {
-            if (low == high || high - low == 1)
-                candidates(low) 
+            if (low == high || high - low == 1){
+                println("Found a match at %d for target %1.2f".format(high, target))
+                candidates(high) 
+            }
+            
             else (low + high)/2 match {
                 case mid if candidates(mid).fitness > target => search(low, mid, target)
                 case mid if candidates(mid).fitness < target => search(mid, high, target)

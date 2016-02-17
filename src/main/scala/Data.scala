@@ -43,7 +43,9 @@ object Data {
         override def toString: String = {
             "Population --- \n" +
             genotypes.mkString("\n") + "\n\n" +
-            adults.mkString("\n") + "\n\n"
+            adults.mkString("\n") + "\n\n" +
+            "Avg fitness: " +
+            ((0.0 /: adults.map(_.fitness))(_+_))/adults.length
         }
     }
 
