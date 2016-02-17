@@ -31,7 +31,8 @@ object GAsolver {
         }
 
         // val test1 = OneMax.population
-        // val test2 = growChildren(test1)
+        // print(test1)
+        // val test2 = Data.Population.createChildren(test1)
         // val test3 = normalizer(test2)
         // val test4 = test3(test2)
 
@@ -96,17 +97,21 @@ object OneMax {
     def selectParents(adults: Pop): Pop =
         adults
     
-    def makeChildren(parents: Pop): Vector[SingleBitGenome] = ???
+    // val reproduce = sexualReproduction(0.1)
 
-    val conf = geneOps[SingleBitGenome](
-        oneMaxPhenotype,
-        selectChildren,
-        selectAdults,
-        selectParents,
-        makeChildren
-    )
+    // def makeChildren(adults: Pop): Vector[SingleBitGenome] =
+    //     reproduce(adults)
 
-    // 
+
+    // val conf = geneOps[SingleBitGenome](
+    //     oneMaxPhenotype,
+    //     selectChildren,
+    //     selectAdults,
+    //     selectParents,
+    //     makeChildren
+    // )
+
+    
     // val population = Population[SingleBitGenome](
     //     initializeGenome(20),
     //     Vector[Phenotype[SingleBitGenome]](),

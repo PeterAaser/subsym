@@ -20,7 +20,7 @@ object Data {
     }
 
     case class Phenotype[A <: Genome[A]](
-        genome: Genome[A], 
+        genome: A,
         fitness: Double, 
         age: Int
     )

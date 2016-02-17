@@ -184,21 +184,28 @@ object Reproduction {
 
 
     // TODO asInstanceOf... uh oh
-    def sexual[A <: Genome[A]](p1: Phenotype[A], p2: Phenotype[A], mutationRate: Double): (Genome[A], Genome[A]) = {
-        val children = p1.genome.cross(p2.genome.asInstanceOf[A])
-        (children._1.mutate(mutationRate), children._2.mutate(mutationRate))
+    def sexual[A <: Genome[A]](
+        p1: Phenotype[A], 
+        p2: Phenotype[A], mutationRate: Double
+        ): (Genome[A], Genome[A]) = {
+
+            val children = p1.genome.cross(p2.genome)
+            (children._1.mutate(mutationRate), children._2.mutate(mutationRate))
     }
 
 
-    def sexualReproduction[A <: Genome[A]](mutationRate: Double): (IndexedSeq[Phenotype[A]] => IndexedSeq[Genome[A]]) = {
-        def reproduce(parents: IndexedSeq[Phenotype[A]]): IndexedSeq[Genome[A]] = {
-            parents match {
-                case p1 +: p2 +: t => 
-                    val children = sexual(p1, p2, mutationRate)
-                    children._1 +: children._2 +: reproduce(t)
-                case _ => Vector[Genome[A]]()
+    def sexualReproduction[A <: Genome[A]](
+        mutationRate: Double
+        ): (IndexedSeq[Phenotype[A]] => IndexedSeq[Genome[A]]) = {
+
+            def reproduce(parents: IndexedSeq[Phenotype[A]]): IndexedSeq[Genome[A]] = {
+                parents match {
+                    case p1 +: p2 +: t => 
+                        val children = sexual(p1, p2, mutationRate)
+                        children._1 +: children._2 +: reproduce(t)
+                    case _ => Vector[Genome[A]]()
+                }
             }
-        }
         parents => reproduce(parents)
     }
 
