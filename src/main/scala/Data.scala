@@ -46,7 +46,8 @@ object Data {
 
         override def toString: String = {
             "Population --- \n" +
-            genotypes.foreach(println(_))
+            genotypes.mkString("\n") + "\n\n" +
+            adults.mkString("\n") + "\n\n"
         }
     }
 
