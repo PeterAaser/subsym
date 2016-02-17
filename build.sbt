@@ -14,7 +14,10 @@ libraryDependencies ++= Seq(
     "org.scalafx" %% "scalafx" % "8.0.60-R9"
 )
 
+scalacOptions := Seq("-feature", "-deprecation")
+
 fork in run := true
+cancelable in Global := true
 
 import com.github.retronym.SbtOneJar._
 

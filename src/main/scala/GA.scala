@@ -5,10 +5,13 @@ import scalaz._
 import Scalaz._
 
 import Data._
-import Selection._
 import scala.util.Random
-import Representations._
 import OneMax._
+
+import Representations._
+import Scaling._
+import Reproduction._
+import ParentSelection._
 
 import reflect.runtime.universe._
 

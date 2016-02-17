@@ -9,6 +9,12 @@ import scala.language.postfixOps
 
 import Data._
 
+import Representations._
+import Scaling._
+import Reproduction._
+import ParentSelection._
+
+
 object Representations {
 
     // TODO more intelligent selection.
@@ -53,7 +59,7 @@ object Representations {
 }
 
 
-object Selection {
+object Scaling {
 
     // Scales a population of candidates using some function that can be tailored to populations
     def scale[A <: Genome[A]](
@@ -64,6 +70,11 @@ object Selection {
             val scalingFun = scaler(candidates)
             candidates.map(c => c.copy(fitness=scalingFun(c.fitness)))
         }
+
+    def sigma[A <: Genome[A]](candidates: IndexedSeq[Phenotype[A]])
+    : IndexedSeq[Phenotype[A]] => (Double => Double) = {
+        ???
+    }
 
 
     // creates a fitness normalizing function from a list of candidates such that the highest has
@@ -88,6 +99,10 @@ object Selection {
         }
         stackingSum(candidates, 0.0)
     }
+
+}
+
+object ParentSelection {
 
     // Roulette selection expects a roulette scaled population
     def rouletteSelection[A <: Genome[A]](
@@ -168,13 +183,12 @@ object Reproduction {
     }
 
 
-    // As if this isnt gonna explode in my face
+    // TODO asInstanceOf... uh oh
     def sexual[A <: Genome[A]](p1: Phenotype[A], p2: Phenotype[A], mutationRate: Double): (Genome[A], Genome[A]) = {
-        val iSuckAtScala = p2.genome match { case s: A => s }
-        val children = p1.genome.cross(iSuckAtScala)
-        // (children._1.mutate(mutationRate), children._2.mutate(mutationRate))
-        ???
+        val children = p1.genome.cross(p2.genome.asInstanceOf[A])
+        (children._1.mutate(mutationRate), children._2.mutate(mutationRate))
     }
+
 
     def sexualReproduction[A <: Genome[A]](mutationRate: Double): (IndexedSeq[Phenotype[A]] => IndexedSeq[Genome[A]]) = {
         def reproduce(parents: IndexedSeq[Phenotype[A]]): IndexedSeq[Genome[A]] = {
@@ -187,6 +201,7 @@ object Reproduction {
         }
         parents => reproduce(parents)
     }
+
 
     def asexualReproduction[A <: Genome[A]](mutationRate: Double): (IndexedSeq[Phenotype[A]] => IndexedSeq[Genome[A]]) = {
         parents => parents.map(asexual(_, mutationRate))
