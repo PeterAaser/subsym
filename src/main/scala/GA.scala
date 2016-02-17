@@ -40,39 +40,13 @@ object GAsolver {
         testPop = Data.Population.cycle(testPop)
         println(testPop)
 
-
-        // val test3 = normalizer(test2.adults)
-        // val test4 = test3(test2)
-
-        // val normTest = scale(test2, test3)
-        // printList(test2)
-        // printList(normTest)
-
-        // val rouletteTest = rouletteScaler(normTest)
-        // printList(rouletteTest)
-
-        // val selected = rouletteSelection(rouletteTest, 2)
-        // printList(selected)
-
-        // val test5 = test2.head.genome
-        // val test7 = test2(2).genome match { case s: SingleBitGenome => s }
-        // // println((test5, test7))
-
-        // val test8 = test2.head.genome.cross(test7)
-        // // println(test8)
-
-        // val test9 = test8._1
-        // // println(test9)
-
-        // val test10 = test9.mutate
-        // // println(test10)
-
     }
 }
 
 object OneMax {
 
-    type Pop = IndexedSeq[Phenotype[SingleBitGenome]]
+    type Pheno = Phenotype[SingleBitGenome]
+    type Phenos = IndexedSeq[Pheno]
 
     val problemSize = 10
 
@@ -89,40 +63,32 @@ object OneMax {
     def initializeGenome(size: Int): Vector[SingleBitGenome] =
         Vector.fill(size)(SingleBitGenome(initializeGene(problemSize)))
     
-
-    def oneMaxPhenotype(genome: SingleBitGenome): Phenotype[SingleBitGenome] =
+    def oneMaxPhenotype(genome: SingleBitGenome): Pheno =
         Phenotype[SingleBitGenome](genome, evaluate(genome), 0) 
      
-
-    def selectChildren(children: IndexedSeq[Phenotype[SingleBitGenome]]): IndexedSeq[Phenotype[SingleBitGenome]] =
+    def selectChildren(children: Phenos): Phenos =
         children
 
-
-    def selectAdults(children: IndexedSeq[Phenotype[SingleBitGenome]], adults: IndexedSeq[Phenotype[SingleBitGenome]]): IndexedSeq[Phenotype[SingleBitGenome]] =
+    def selectAdults(children: Phenos, adults: Phenos): Phenos =
         children
-
     
-    def selectParents[SingleBitGenome](adults: Pop): Pop =
+    def selectParents(adults: Phenos): Phenos =
         adults
-    
-    val reproduce = sexualReproduction[SingleBitGenome](0.1)
 
-    def makeChildren(adults: Pop): Vector[SingleBitGenome] =
-        reproduce(adults).toVector
+    def makeChildren(adults: Phenos): Vector[SingleBitGenome] =
+        sexualReproduction(0.1)(adults).toVector
 
-
-    val conf = geneOps[SingleBitGenome](
+    val ops = geneOps[SingleBitGenome](
         oneMaxPhenotype,
         selectChildren,
         selectAdults,
         selectParents,
         makeChildren
     )
-
     
     val population = Population[SingleBitGenome](
         initializeGenome(20),
         Vector[Phenotype[SingleBitGenome]](),
-        conf
+        ops
     )
 }

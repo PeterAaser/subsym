@@ -28,11 +28,7 @@ object Data {
 
     case class geneOps[A <: Genome[A]]( 
         grow: A => Phenotype[A],
-
-        // Weed out unfit children
         childSel: IndexedSeq[Phenotype[A]] => IndexedSeq[Phenotype[A]],
-
-        // Select new adult pool
         adultSel: (IndexedSeq[Phenotype[A]], IndexedSeq[Phenotype[A]]) => IndexedSeq[Phenotype[A]],
         parentSel: IndexedSeq[Phenotype[A]] => IndexedSeq[Phenotype[A]],
         makeChildren: IndexedSeq[Phenotype[A]] => IndexedSeq[A]
