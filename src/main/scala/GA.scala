@@ -31,10 +31,7 @@ object GAsolver {
         }
 
         val testPop = OneMax.population
-        println(testPop)
-
-        val next = testPop.evolve(testPop)
-        println(next)
+        testPop.run(50)
 
         // val next = Data.Population.run(40, testPop)
 
@@ -47,11 +44,14 @@ object OneMax {
     type Phenos = IndexedSeq[Pheno]
 
     val problemSize = 30
-    val adults = 30
-    val children = 50
+    val adults = 20
+    val children = 20
+    val crossrate = 0.2
+    val mutationRate = 0.3
+    val mutationSeverity = 0.3
 
     def initializeGene(n: Int): BitGene = {
-        BitGene(Vector.fill(n)(Random.nextInt(2)))
+        BitGene(Vector.fill(n)(Random.nextInt(2)), crossrate, mutationSeverity)
     }
 
     def grow(genome: SingleBitGenome): Pheno =
@@ -80,15 +80,17 @@ object OneMax {
             ParentSelection.rouletteSelection(rScaled)(p)
         })
 
-    def selectParents2(adults: Phenos): Phenos = 
-        ParentSelection.tournamentSelection(adults, adults.length, 0.2, 4)
+    val selectParents2: ( Int => ( Phenos => Phenos)) = 
+        p => (adults => 
+            ParentSelection.tournamentSelection(adults, adults.length, 0.2, 4))
+        
 
     def reproduce(adults: Phenos): Vector[SingleBitGenome] =
-         sexualReproduction(0.1)(adults).toVector
+         sexualReproduction(mutationRate)(adults).toVector
 
     val evolutionStrategy = AdultSelection.full[SingleBitGenome](
         adults,
-        selectParents,
+        selectParents2,
         reproduce,
         genomes => genomes.map(grow(_))
     )

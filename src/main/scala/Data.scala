@@ -40,11 +40,23 @@ object Data {
 
         def next = evolve(this)
 
+        def run(n: Int): Population[A] = {
+            println(this.verbose)
+            if(n > 1){
+                val evo = next
+                evo.run(n - 1)
+            }
+            else
+                this
+        }
+
         def verbose: String = {
             "Population --- \n" +
             adults.mkString("\n") + "\n\n" +
             "Avg fitness: " +
-            ((0.0 /: adults.map(_.trueFitness))(_+_))/adults.length
+            ((0.0 /: adults.map(_.trueFitness))(_+_))/adults.length + 
+            "\nBest fit \n: " +
+            (if (adults.isEmpty) "n/a" else adults.maxBy(_.trueFitness).trueFitness)
         }
 
         override def toString: String = {

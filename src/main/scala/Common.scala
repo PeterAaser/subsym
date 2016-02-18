@@ -15,30 +15,47 @@ import Reproduction._
 import ParentSelection._
 import AdultSelection._
 
-
 object Representations {
 
-    // TODO more intelligent selection.
-    case class BitGene(bits: Vector[Int]) extends Gene[BitGene] {
+    case class BitGene(bits: Vector[Int], crossRate: Double, mutationSeverity: Double) extends Gene[BitGene] {
         def cross(g2: BitGene): (BitGene, BitGene) = {
 
-            val start = Random.nextInt(bits.length - 2)
-            val end = start + 1
+            // TODO unfuck this
+            def crossBit(b1: Vector[Int], b2: Vector[Int], ops: Int): (Vector[Int], Vector[Int]) = {
+                if (ops > 1){
+                    val crossPoint = Random.nextInt(bits.length - 2)
+                    val end = crossPoint + 1
 
-            val c1 = (bits take start) ++
-                (g2.bits slice (start, end)) ++
-                (bits takeRight (bits.length - end))
+                    val c1 = (b1 take crossPoint) ++
+                        (b2 slice (crossPoint, end)) ++
+                        (b1 takeRight (bits.length - end))
 
-            val c2 = (g2.bits take start) ++
-                (bits slice (start, end)) ++
-                (g2.bits takeRight (bits.length - end))
+                    val c2 = (b2 take crossPoint) ++
+                        (b1 slice (crossPoint, end)) ++
+                        (b2 takeRight (bits.length - end))
 
-            (BitGene(c1), BitGene(c2))
+                    crossBit(c1, c2, ops - 1)
+                }
+                else
+                    (b1, b2)
+            }
+
+            val (c1, c2) = crossBit(bits, g2.bits, (bits.length*crossRate).toInt)
+
+            (copy(bits=c1), g2.copy(bits=c2))
         }
 
         def mutate: BitGene = {
-            val point = Random.nextInt(bits.length - 1)
-            copy(bits.updated(point, math.abs(bits(point) - 1)))
+
+            def mutateBits(b1: Vector[Int], ops: Int): Vector[Int] = {
+                if (ops > 1){
+                    val mPoint = Random.nextInt(bits.length - 1) 
+                    mutateBits(b1.updated(mPoint, math.abs(b1(mPoint) - 1)), ops - 1)
+                }
+                else
+                    b1
+            }
+            copy(bits = mutateBits(bits, (bits.length*mutationSeverity).toInt))
         }
     }
 
@@ -131,11 +148,12 @@ object ParentSelection {
     : IndexedSeq[Phenotype[A]] = {
 
         def select: Phenotype[A] = {
-            if(Random.nextDouble > epsilon)
+            if(Random.nextDouble < epsilon){
                 candidates(Random.nextInt(candidates.size - 1))
-
-            else
+            }
+            else{
                 tournament(candidates, contestants)
+            }
         }
 
         def tournament[A <: Genome[A]](
@@ -143,21 +161,22 @@ object ParentSelection {
             contestants: Int
         ): Phenotype[A] = {
 
-            // https://stackoverflow.com/questions/14862602/scala-java-generating-a-set-of-non-repeating-random-numbers
-            def sample[A](items: List[A], sampleSize: Int) = {
-                def collect(vect: Vector[A], sampleSize: Int, acc: List[A]): List[A] = {
-                    if(sampleSize == 0) acc
-                    else {
-                        val index = Random.nextInt(vect.size)
-                        collect( vect.updated(index, vect(0)) tail, sampleSize - 1, vect(index) :: acc)
-                    }
-                }
-                collect(items toVector, sampleSize, Nil)
-            }
             val chosen = sample(0 to candidates.size - 1 toList, contestants).map(candidates(_))
             chosen.reduceLeft( (l, r) => if (l.relativeFitness > r.relativeFitness) l else r)
         }
         Vector.fill(winners)(select)
+    }
+
+    // https://stackoverflow.com/questions/14862602/scala-java-generating-a-set-of-non-repeating-random-numbers
+    def sample[A](items: List[A], sampleSize: Int) = {
+        def collect(vect: Vector[A], sampleSize: Int, acc: List[A]): List[A] = {
+            if(sampleSize == 0) acc
+            else {
+                val index = Random.nextInt(vect.size)
+                collect( vect.updated(index, vect(0)) tail, sampleSize - 1, vect(index) :: acc)
+            }
+        }
+        collect(items toVector, sampleSize, Nil)
     }
 }
 
