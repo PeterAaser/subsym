@@ -30,7 +30,7 @@ object Data {
     }
 
 
-    case class Params(maxFitness: Double)
+    case class Params[A <: Genome[A]](val control: Population[A] => (Population[A] => Population[A]))
 
 
     case class Population[A <: Genome[A]](

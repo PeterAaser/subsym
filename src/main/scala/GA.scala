@@ -30,8 +30,11 @@ object GAsolver {
             println()
         }
 
-        // val testPop = OneMax.population
-        // println(testPop)
+        val testPop = OneMax.population
+        println(testPop)
+
+        val next = testPop.evolve(testPop)
+        println(next)
 
         // val next = Data.Population.run(40, testPop)
 
@@ -40,57 +43,58 @@ object GAsolver {
 
 object OneMax {
 
-    // type Pheno = Phenotype[SingleBitGenome]
-    // type Phenos = IndexedSeq[Pheno]
+    type Pheno = Phenotype[SingleBitGenome]
+    type Phenos = IndexedSeq[Pheno]
 
-    // val problemSize = 30
+    val problemSize = 30
+    val adults = 30
+    val children = 50
 
-    // def initializeGene(n: Int): BitGene = {
-    //     BitGene(Vector.fill(n)(Random.nextInt(2)))
-    // }
+    def initializeGene(n: Int): BitGene = {
+        BitGene(Vector.fill(n)(Random.nextInt(2)))
+    }
 
-    // val evaluate: (SingleBitGenome => Double) =
-    //     genome => {
-    //         val sum = (0 /: genome.gene.bits)(_+_)
-    //         sum.toDouble
-    //     }
+    def grow(genome: SingleBitGenome): Pheno =
+        Phenotype[SingleBitGenome](genome, evaluate(genome), evaluate(genome), 0) 
 
-    // def initializeGenome(size: Int): Vector[SingleBitGenome] =
-    //     Vector.fill(size)(SingleBitGenome(initializeGene(problemSize)))
-    // 
-    // def oneMaxPhenotype(genome: SingleBitGenome): Pheno =
-    //     Phenotype[SingleBitGenome](genome, evaluate(genome), evaluate(genome), 0) 
-    //  
-    // def selectChildren(children: Phenos): Phenos =
-    //     children
+    val evaluate: (SingleBitGenome => Double) =
+        genome => {
+            val sum = (0 /: genome.gene.bits)(_+_)
+            sum.toDouble
+        }
 
-    // def selectAdults(children: Phenos, adults: Phenos): Phenos =
-    //     children
-    // 
-    // def selectParents(adults: Phenos): Phenos = {
-    //     val normalizer = Scaling.normalizer(adults)
-    //     val scaled = Scaling.scale(adults, normalizer)
-    //     val rScaled = Scaling.rouletteScaler(adults)
-    //     ParentSelection.rouletteSelection(rScaled, rScaled.length)
-    // }
+    def initGenome: SingleBitGenome =
+        SingleBitGenome(initializeGene(problemSize))
 
-    // def selectParents2(adults: Phenos): Phenos = 
-    //     ParentSelection.tournamentSelection(adults, adults.length, 0.2, 4)
+    def initPhenotype: Pheno =
+        grow(initGenome)
 
-    // def makeChildren(adults: Phenos): Vector[SingleBitGenome] =
-    //     sexualReproduction(0.1)(adults).toVector
+    def initPop: Phenos = 
+        Vector.fill(adults)(initPhenotype)
 
-    // val ops = GeneOps[SingleBitGenome](
-    //     oneMaxPhenotype,
-    //     selectChildren,
-    //     selectAdults,
-    //     selectParents2,
-    //     makeChildren
-    // )
-    // 
-    // val population = Population[SingleBitGenome](
-    //     initializeGenome(20),
-    //     Vector[Phenotype[SingleBitGenome]](),
-    //     ops
-    // )
+    val selectParents: ( Int => ( Phenos => Phenos )) = 
+        p => (adults => {
+            val normalizer = Scaling.normalizer(adults)
+            val scaled = Scaling.scale(adults, normalizer)
+            val rScaled = Scaling.rouletteScaler(adults)
+            ParentSelection.rouletteSelection(rScaled)(p)
+        })
+
+    def selectParents2(adults: Phenos): Phenos = 
+        ParentSelection.tournamentSelection(adults, adults.length, 0.2, 4)
+
+    def reproduce(adults: Phenos): Vector[SingleBitGenome] =
+         sexualReproduction(0.1)(adults).toVector
+
+    val evolutionStrategy = AdultSelection.full[SingleBitGenome](
+        adults,
+        selectParents,
+        reproduce,
+        genomes => genomes.map(grow(_))
+    )
+
+    val population = Population[SingleBitGenome](
+        initPop,
+        evolutionStrategy
+    )
 }
