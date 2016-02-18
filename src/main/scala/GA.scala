@@ -31,39 +31,33 @@ object GAsolver {
         }
 
 
-        var testPop = OneMax.population
+        val testPop = OneMax.population
         println(testPop)
 
-        testPop = Data.Population.nextAdultPool(testPop)
-        println(testPop)
+        val next = Data.Population.run(40, testPop)
+
+
+        // testPop = Data.Population.nextAdultPool(testPop)
+        // println(testPop)
 
         // testPop = Data.Population.cycle(testPop)
         // println(testPop)
 
-        var adults = testPop.adults
-        printList(adults)
-        println( (0.0 /: adults.map(_.trueFitness))(_+_) )
+        // var adults = testPop.adults
+        // printList(adults)
+        // println( (0.0 /: adults.map(_.trueFitness))(_+_) )
 
-        val normalizer = Scaling.normalizer(adults)
-        println(normalizer.colonType)
+        // val normalizer = Scaling.normalizer(adults)
+        // println(normalizer.colonType)
 
-        val scaled = Scaling.scale(adults, normalizer)
-        printList(scaled)
+        // val scaled = Scaling.scale(adults, normalizer)
+        // printList(scaled)
 
-        val rScaled = Scaling.rouletteScaler(adults)
-        printList(rScaled)
+        // val rScaled = Scaling.rouletteScaler(adults)
+        // printList(rScaled)
 
-        val parents = ParentSelection.rouletteSelection(rScaled, rScaled.length)
-        printList(parents)
-
-        // def refit(p: Phenotype[SingleBitGenome]) : Phenotype[SingleBitGenome] =
-        //     p.copy(fitness = OneMax.oneMaxPhenotype(p.genome).fitness)
-
-        // val nParents = parents.map(refit(_))
-        // println( (0.0 /: nParents.map(_.fitness))(_+_) )
-        // printList(nParents)
-        
-
+        // val parents = ParentSelection.rouletteSelection(rScaled, rScaled.length)
+        // printList(parents)
 
     }
 }
@@ -102,13 +96,12 @@ object OneMax {
         val scaled = Scaling.scale(adults, normalizer)
         val rScaled = Scaling.rouletteScaler(adults)
         ParentSelection.rouletteSelection(rScaled, rScaled.length)
-        // adults
     }
 
     def makeChildren(adults: Phenos): Vector[SingleBitGenome] =
         sexualReproduction(0.1)(adults).toVector
 
-    val ops = geneOps[SingleBitGenome](
+    val ops = GeneOps[SingleBitGenome](
         oneMaxPhenotype,
         selectChildren,
         selectAdults,

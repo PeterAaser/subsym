@@ -24,10 +24,13 @@ object Data {
         relativeFitness: Double, 
         trueFitness: Double,
         age: Int
-    )
+    ){
+        def reset: Phenotype[A] = 
+            this.copy(relativeFitness = trueFitness)
+    }
 
 
-    case class geneOps[A <: Genome[A]]( 
+    case class GeneOps[A <: Genome[A]]( 
         grow: A => Phenotype[A],
         childSel: IndexedSeq[Phenotype[A]] => IndexedSeq[Phenotype[A]],
         adultSel: (IndexedSeq[Phenotype[A]], IndexedSeq[Phenotype[A]]) => IndexedSeq[Phenotype[A]],
@@ -35,10 +38,12 @@ object Data {
         makeChildren: IndexedSeq[Phenotype[A]] => IndexedSeq[A]
     )
 
+    case class Params(maxFitness: Double)
+
     case class Population[A <: Genome[A]](
         val genotypes: IndexedSeq[A],
         val adults: IndexedSeq[Phenotype[A]],
-        val config: geneOps[A]
+        val config: GeneOps[A]
     ){
 
         override def toString: String = {
@@ -61,13 +66,25 @@ object Data {
         def createChildren[A <: Genome[A]](p: Population[A]): Population[A] = {
             val parents = p.config.parentSel(p.adults)
             val children = p.config.makeChildren(parents)
-            p.copy(genotypes = children)
+            p.copy(genotypes = children, adults = p.adults.map(_.reset))
         }
 
         def cycle[A <: Genome[A]](p: Population[A]): Population[A] = {
             val p1 = nextAdultPool(p)
             createChildren(p1)
         }
+
+        def run[A <: Genome[A]](runs: Int, p: Population[A]): Population[A] = {
+            if (runs > 0){
+                val pn = cycle(p)
+                println(runs)
+                println(pn)
+                run(runs - 1, pn)
+            }
+            else
+                p
+        }
+
 
     }
 }

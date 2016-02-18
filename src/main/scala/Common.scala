@@ -114,7 +114,6 @@ object ParentSelection {
         // hastily clobbered together
         def search(low: Int, high: Int, target: Double): Phenotype[A] = {
             if (low == high || high - low == 1){
-                println("Found a match at %d for target %1.2f".format(high, target))
                 candidates(high) 
             }
             
