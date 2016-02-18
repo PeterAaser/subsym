@@ -46,8 +46,8 @@ object OneMax {
     val problemSize = 30
     val adults = 20
     val children = 20
-    val crossrate = 0.2
-    val mutationRate = 0.3
+    val crossrate = 0.3
+    val mutationRate = 0.4
     val mutationSeverity = 0.3
 
     def initializeGene(n: Int): BitGene = {

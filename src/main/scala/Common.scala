@@ -20,42 +20,39 @@ object Representations {
     case class BitGene(bits: Vector[Int], crossRate: Double, mutationSeverity: Double) extends Gene[BitGene] {
         def cross(g2: BitGene): (BitGene, BitGene) = {
 
-            // TODO unfuck this
-            def crossBit(b1: Vector[Int], b2: Vector[Int], ops: Int): (Vector[Int], Vector[Int]) = {
-                if (ops > 1){
-                    val crossPoint = Random.nextInt(bits.length - 2)
-                    val end = crossPoint + 1
+            // local effect only
+            val (t1, t2) = (bits.toArray, g2.bits.toArray)
 
-                    val c1 = (b1 take crossPoint) ++
-                        (b2 slice (crossPoint, end)) ++
-                        (b1 takeRight (bits.length - end))
-
-                    val c2 = (b2 take crossPoint) ++
-                        (b1 slice (crossPoint, end)) ++
-                        (b2 takeRight (bits.length - end))
-
-                    crossBit(c1, c2, ops - 1)
-                }
-                else
-                    (b1, b2)
+            for(i <- 0 until (bits.length*crossRate).toInt){
+                val crossPoint = Random.nextInt(bits.length - 1)
+                val temp = t1(crossPoint)
+                t1(crossPoint) = t2(crossPoint)
+                t2(crossPoint) = temp
             }
 
-            val (c1, c2) = crossBit(bits, g2.bits, (bits.length*crossRate).toInt)
-
-            (copy(bits=c1), g2.copy(bits=c2))
+            (copy(bits=t1.toVector), g2.copy(bits=t2.toVector))
         }
 
         def mutate: BitGene = {
 
-            def mutateBits(b1: Vector[Int], ops: Int): Vector[Int] = {
-                if (ops > 1){
-                    val mPoint = Random.nextInt(bits.length - 1) 
-                    mutateBits(b1.updated(mPoint, math.abs(b1(mPoint) - 1)), ops - 1)
-                }
-                else
-                    b1
+            val t1 = bits.toArray
+
+            for(i <- 0 until (bits.length*crossRate).toInt){
+                val mPoint = Random.nextInt(bits.length) 
+                t1(mPoint) = t1(mPoint) ^ 1
             }
-            copy(bits = mutateBits(bits, (bits.length*mutationSeverity).toInt))
+
+            copy(bits=t1.toVector)
+
+            // def mutateBits(b1: Vector[Int], ops: Int): Vector[Int] = {
+            //     if (ops > 1){
+            //         val mPoint = Random.nextInt(bits.length) 
+            //         mutateBits(b1.updated(mPoint, math.abs(b1(mPoint) - 1)), ops - 1)
+            //     }
+            //     else
+            //         b1
+            // }
+            // copy(bits = mutateBits(bits, (bits.length*mutationSeverity).toInt))
         }
     }
 
@@ -266,4 +263,10 @@ object AdultSelection {
             val survivors = adultSel( λ )(children, pop.adults)
             pop.copy(adults = survivors)
         }
+}
+
+object Controllers {
+
+    
+
 }
