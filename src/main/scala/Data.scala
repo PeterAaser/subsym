@@ -19,6 +19,10 @@ object Data {
         def mutate(rate: Double): A
     }
 
+    trait Strategy[A <: Genome[A]] {
+        def evolve(p: Population[A]): Population[A]
+    }
+
     case class Phenotype[A <: Genome[A]](
         genome: A,
         relativeFitness: Double, 
@@ -35,7 +39,8 @@ object Data {
 
     case class Population[A <: Genome[A]](
         val adults: IndexedSeq[Phenotype[A]],
-        val evolve: Population[A] => Population[A]
+        val evolve: Population[A] => Population[A],
+        val strat: Strategy[A]
     ){
 
         def next = evolve(this)

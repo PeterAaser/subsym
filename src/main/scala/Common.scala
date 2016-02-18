@@ -29,30 +29,17 @@ object Representations {
                 t1(crossPoint) = t2(crossPoint)
                 t2(crossPoint) = temp
             }
-
             (copy(bits=t1.toVector), g2.copy(bits=t2.toVector))
         }
 
         def mutate: BitGene = {
-
             val t1 = bits.toArray
 
             for(i <- 0 until (bits.length*crossRate).toInt){
                 val mPoint = Random.nextInt(bits.length) 
                 t1(mPoint) = t1(mPoint) ^ 1
             }
-
             copy(bits=t1.toVector)
-
-            // def mutateBits(b1: Vector[Int], ops: Int): Vector[Int] = {
-            //     if (ops > 1){
-            //         val mPoint = Random.nextInt(bits.length) 
-            //         mutateBits(b1.updated(mPoint, math.abs(b1(mPoint) - 1)), ops - 1)
-            //     }
-            //     else
-            //         b1
-            // }
-            // copy(bits = mutateBits(bits, (bits.length*mutationSeverity).toInt))
         }
     }
 
@@ -86,25 +73,24 @@ object Scaling {
             candidates.map(c => c.copy(relativeFitness=scalingFun(c.relativeFitness)))
         }
 
-    def sigma[A <: Genome[A]](candidates: IndexedSeq[Phenotype[A]])
-    : IndexedSeq[Phenotype[A]] => (Double => Double) = {
-        ???
+    def sigma[A <: Genome[A]](candidates: IndexedSeq[Phenotype[A]]): (Double => Double) = {
+        val mean = (0.0 /: candidates.map(_.relativeFitness))(_+_)/(candidates.length.toDouble)
+        val stddev = (0.0 /: candidates.map(p => math.pow(p.relativeFitness - mean, 2)))(_+_)/(candidates.length.toDouble)
+        (relativeFitness => relativeFitness*(1.0 + ((relativeFitness - mean) / (2.0 * stddev))))
     }
 
 
     // creates a fitness normalizing function from a list of candidates such that the highest has
     // fitness 1.0
-    def normalizer[A <: Genome[A]](candidates: IndexedSeq[Phenotype[A]])
-    : IndexedSeq[Phenotype[A]] => (Double => Double) = {
+    def normalizer[A <: Genome[A]](candidates: IndexedSeq[Phenotype[A]]): (Double => Double) = {
 
         val fittest = candidates.reduceLeft( (l, r) => if (l.relativeFitness > r.relativeFitness) l else r)
-        candidates => (relativeFitness => relativeFitness/(fittest.relativeFitness))
+        (relativeFitness => relativeFitness/(fittest.relativeFitness))
     }
 
 
     // creates a roulette scaled, normalized list of candidates
-    def rouletteScaler[A <: Genome[A]](candidates: IndexedSeq[Phenotype[A]])
-    : IndexedSeq[Phenotype[A]] = {
+    def rouletteScaler[A <: Genome[A]](candidates: IndexedSeq[Phenotype[A]]): IndexedSeq[Phenotype[A]] = {
 
         val fitnessSum = (0.0 /: candidates.map(_.relativeFitness))(_+_)
 
@@ -126,13 +112,19 @@ object ParentSelection {
 
         // hastily clobbered together
         def search(low: Int, high: Int, target: Double): Phenotype[A] = {
-            if (low == high || high - low == 1){
+            // println("Searching for %1.2f between %d and %d".format(target, low, high))
+            if (low == high - 1){
+                // println("Located target %1.2f at spot %d:".format(target, low))
+                // if (high > 0){ println(candidates(high - 1)) }
+                // println(candidates(high))
+                // if (high < 18){ println(candidates(high + 1)) }
+                // println()
                 candidates(high) 
             }
             else (low + high)/2 match {
                 case mid if candidates(mid).relativeFitness > target => search(low, mid, target)
                 case mid if candidates(mid).relativeFitness < target => search(mid, high, target)
-                case _ => candidates(low)
+                case _ => candidates(high)
             }
         }
         Vector.fill(spins)(search(0, candidates.size, Random.nextDouble))
@@ -267,6 +259,8 @@ object AdultSelection {
 
 object Controllers {
 
-    
+    case class Normal[A <: Genome[A]]() extends Strategy[A] {
+        def evolve(p: Population[A]): Population[A] = p
+    }
 
 }
