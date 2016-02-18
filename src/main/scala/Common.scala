@@ -172,14 +172,7 @@ object ParentSelection {
 }
 
 
-// Common strategies for including children into adult pools
 object Reproduction {
-
-    def full[A <: Genome[A]](
-        children: IndexedSeq[Phenotype[A]], 
-        adults: IndexedSeq[Phenotype[A]]
-    ): IndexedSeq[Phenotype[A]] = children
-
         
     def asexual[A <: Genome[A]](p: Phenotype[A], mutationRate: Double): Genome[A] = {
         p.genome.mutate(mutationRate)
@@ -208,11 +201,51 @@ object Reproduction {
                     case _ => Vector[A]()
                 }
             }
-        parents => reproduce(parents)
+            parents => reproduce(parents)
     }
 
 
     def asexualReproduction[A <: Genome[A]](mutationRate: Double): (IndexedSeq[Phenotype[A]] => IndexedSeq[Genome[A]]) = {
         parents => parents.map(asexual(_, mutationRate))
     }
+}
+
+
+object AdultSelection {
+    
+    def full[A <: Genome[A]](
+        parentSel: IndexedSeq[Phenotype[A]] => IndexedSeq[Phenotype[A]],
+        reproductionScheme: IndexedSeq[Phenotype[A]] => IndexedSeq[Phenotype[A]]
+    ): Population[A] => Population[A] =
+        pop => {
+            val parents = parentSel(pop.adults)
+            val children = reproductionScheme(parents)
+            pop.copy(adults = children)
+        }
+    
+
+    def overProduction[A <: Genome[A]](
+        parentSel: IndexedSeq[Phenotype[A]] => IndexedSeq[Phenotype[A]],
+        reproductionScheme: IndexedSeq[Phenotype[A]] => IndexedSeq[Phenotype[A]],
+        adultSel: IndexedSeq[Phenotype[A]] => IndexedSeq[Phenotype[A]]
+    ): Population[A] => Population[A] =
+        pop => {
+            val parents = parentSel(pop.adults)
+            val children = reproductionScheme(parents)
+            val survivors = adultSel(children)
+            pop.copy(adults = survivors)
+        }
+
+
+    def mixin[A <: Genome[A]](
+        parentSel: IndexedSeq[Phenotype[A]] => IndexedSeq[Phenotype[A]],
+        reproductionScheme: IndexedSeq[Phenotype[A]] => IndexedSeq[Phenotype[A]],
+        adultSel: (IndexedSeq[Phenotype[A]], IndexedSeq[Phenotype[A]]) => IndexedSeq[Phenotype[A]]
+    ): Population[A] => Population[A] =
+        pop => {
+            val parents = parentSel(pop.adults)
+            val children = reproductionScheme(parents)
+            val survivors = adultSel(children, pop.adults)
+            pop.copy(adults = survivors)
+        }
 }
