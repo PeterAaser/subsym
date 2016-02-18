@@ -42,7 +42,7 @@ object GAsolver {
 
         var adults = testPop.adults
         printList(adults)
-        println( (0.0 /: adults.map(_.fitness))(_+_) )
+        println( (0.0 /: adults.map(_.trueFitness))(_+_) )
 
         val normalizer = Scaling.normalizer(adults)
         println(normalizer.colonType)
@@ -56,12 +56,12 @@ object GAsolver {
         val parents = ParentSelection.rouletteSelection(rScaled, rScaled.length)
         printList(parents)
 
-        def refit(p: Phenotype[SingleBitGenome]) : Phenotype[SingleBitGenome] =
-            p.copy(fitness = OneMax.oneMaxPhenotype(p.genome).fitness)
+        // def refit(p: Phenotype[SingleBitGenome]) : Phenotype[SingleBitGenome] =
+        //     p.copy(fitness = OneMax.oneMaxPhenotype(p.genome).fitness)
 
-        val nParents = parents.map(refit(_))
-        println( (0.0 /: nParents.map(_.fitness))(_+_) )
-        printList(nParents)
+        // val nParents = parents.map(refit(_))
+        // println( (0.0 /: nParents.map(_.fitness))(_+_) )
+        // printList(nParents)
         
 
 
@@ -89,7 +89,7 @@ object OneMax {
         Vector.fill(size)(SingleBitGenome(initializeGene(problemSize)))
     
     def oneMaxPhenotype(genome: SingleBitGenome): Pheno =
-        Phenotype[SingleBitGenome](genome, evaluate(genome), 0) 
+        Phenotype[SingleBitGenome](genome, evaluate(genome), evaluate(genome), 0) 
      
     def selectChildren(children: Phenos): Phenos =
         children

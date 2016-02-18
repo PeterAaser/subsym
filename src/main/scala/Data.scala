@@ -21,7 +21,8 @@ object Data {
 
     case class Phenotype[A <: Genome[A]](
         genome: A,
-        fitness: Double, 
+        relativeFitness: Double, 
+        trueFitness: Double,
         age: Int
     )
 
@@ -45,7 +46,7 @@ object Data {
             genotypes.mkString("\n") + "\n\n" +
             adults.mkString("\n") + "\n\n" +
             "Avg fitness: " +
-            ((0.0 /: adults.map(_.fitness))(_+_))/adults.length
+            ((0.0 /: adults.map(_.trueFitness))(_+_))/adults.length
         }
     }
 

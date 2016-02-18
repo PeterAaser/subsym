@@ -68,7 +68,7 @@ object Scaling {
     : IndexedSeq[Phenotype[A]] = {
 
             val scalingFun = scaler(candidates)
-            candidates.map(c => c.copy(fitness=scalingFun(c.fitness)))
+            candidates.map(c => c.copy(relativeFitness=scalingFun(c.relativeFitness)))
         }
 
     def sigma[A <: Genome[A]](candidates: IndexedSeq[Phenotype[A]])
@@ -82,8 +82,8 @@ object Scaling {
     def normalizer[A <: Genome[A]](candidates: IndexedSeq[Phenotype[A]])
     : IndexedSeq[Phenotype[A]] => (Double => Double) = {
 
-        val fittest = candidates.reduceLeft( (l, r) => if (l.fitness > r.fitness) l else r)
-        candidates => (fitness => fitness/(fittest.fitness))
+        val fittest = candidates.reduceLeft( (l, r) => if (l.relativeFitness > r.relativeFitness) l else r)
+        candidates => (relativeFitness => relativeFitness/(fittest.relativeFitness))
     }
 
 
@@ -91,10 +91,10 @@ object Scaling {
     def rouletteScaler[A <: Genome[A]](candidates: IndexedSeq[Phenotype[A]])
     : IndexedSeq[Phenotype[A]] = {
 
-        val fitnessSum = (0.0 /: candidates.map(_.fitness))(_+_)
+        val fitnessSum = (0.0 /: candidates.map(_.relativeFitness))(_+_)
 
         def stackingSum(ps: IndexedSeq[Phenotype[A]], stack: Double): IndexedSeq[Phenotype[A]] = ps match {
-            case h +: t => h.copy( fitness = (h.fitness + stack)/fitnessSum) +: stackingSum(t, stack + h.fitness)
+            case h +: t => h.copy( relativeFitness = (h.relativeFitness + stack)/fitnessSum) +: stackingSum(t, stack + h.relativeFitness)
             case _ => Vector[Phenotype[A]]()
         }
         stackingSum(candidates, 0.0)
@@ -119,8 +119,8 @@ object ParentSelection {
             }
             
             else (low + high)/2 match {
-                case mid if candidates(mid).fitness > target => search(low, mid, target)
-                case mid if candidates(mid).fitness < target => search(mid, high, target)
+                case mid if candidates(mid).relativeFitness > target => search(low, mid, target)
+                case mid if candidates(mid).relativeFitness < target => search(mid, high, target)
                 case _ => candidates(low)
             }
         }
@@ -165,7 +165,7 @@ object ParentSelection {
             }
 
             val chosen = sample(0 to candidates.size - 1 toList, contestants).map(candidates(_))
-            chosen.reduceLeft( (l, r) => if (l.fitness > r.fitness) l else r)
+            chosen.reduceLeft( (l, r) => if (l.relativeFitness > r.relativeFitness) l else r)
         }
 
         select(winners)
