@@ -30,19 +30,16 @@ object Data {
     }
 
 
-    case class GeneOps[A <: Genome[A]]( 
-        grow: A => Phenotype[A],
-        evolve: Population[A] => Population[A]
-    )
-
-
     case class Params(maxFitness: Double)
 
 
     case class Population[A <: Genome[A]](
         val adults: IndexedSeq[Phenotype[A]],
-        val config: GeneOps[A]
+        val evolve: Population[A] => Population[A]
     ){
+
+        def next = evolve(this)
+
         def verbose: String = {
             "Population --- \n" +
             adults.mkString("\n") + "\n\n" +
@@ -56,13 +53,5 @@ object Data {
             "\nBest fit \n: " +
             (if (adults.isEmpty) "n/a" else adults.maxBy(_.trueFitness).trueFitness)
         }
-    }
-    case object Population {
-
-        // def cycle[A <: Genome[A]](p: Population[A]): Population[A] = {
-        //     val parents = p.config.parentSel(p.adults)
-        //     val children = p.config.makeChildren(parents)
-        //     p.config.adultSel(p, children.map(p.config.grow(_)))
-        // }
     }
 }
