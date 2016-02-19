@@ -58,6 +58,39 @@ object Representations {
             else this
         }
     }
+
+    case class SymbolGene(symbol: Int, s: Int) extends Gene[SymbolGene] {
+        def cross(g2: SymbolGene): (SymbolGene, SymbolGene) =
+            (g2, this)
+        
+        def mutate: SymbolGene = copy(symbol = Random.nextInt(s))
+    }
+
+    case class SymbolGenome(genome: IndexedSeq[SymbolGene], crossRate: Double, mutationSeverity: Double) extends Genome[SymbolGenome] {
+
+        def cross(genome2: SymbolGenome): (SymbolGenome, SymbolGenome) = {
+            val (t1, t2) = (genome.toArray, genome2.genome.toArray)
+            for(i <- 0 until(genome.length*crossRate).toInt){
+                val crossPoint = Random.nextInt(genome.length - 1)
+                val (g1, g2) = t1(crossPoint).cross(t2(crossPoint))
+                t1(crossPoint) = g2
+                t2(crossPoint) = g1
+            }
+            (copy(genome=t1.toVector), genome2.copy(genome=t2.toVector))
+        }
+
+        def mutate(rate: Double): SymbolGenome = {
+            val t1 = genome.toArray
+
+            for(i <- 0 until (genome.length*crossRate).toInt){
+                val mPoint = Random.nextInt(genome.length)
+                t1(mPoint) = t1(mPoint).mutate
+            }
+            copy(genome=t1.toVector)
+        }
+
+        override def toString: String = genome.map(_.symbol).mkString("[", "][", "]")
+    }
 }
 
 
@@ -75,8 +108,12 @@ object Scaling {
 
     def sigma[A <: Genome[A]](candidates: IndexedSeq[Phenotype[A]]): (Double => Double) = {
         val mean = (0.0 /: candidates.map(_.relativeFitness))(_+_)/(candidates.length.toDouble)
-        val stddev = (0.0 /: candidates.map(p => math.pow(p.relativeFitness - mean, 2)))(_+_)/(candidates.length.toDouble)
-        (relativeFitness => relativeFitness*(1.0 + ((relativeFitness - mean) / (2.0 * stddev))))
+        if(mean == 0.0)
+            (relativeFitness => relativeFitness)
+        else{
+            val stddev = (0.0 /: candidates.map(p => math.pow(p.relativeFitness - mean, 2)))(_+_)/(candidates.length.toDouble)
+            (relativeFitness => relativeFitness*(1.0 + ((relativeFitness - mean) / (2.0 * stddev))))
+        }
     }
 
 
@@ -86,6 +123,14 @@ object Scaling {
 
         val fittest = candidates.reduceLeft( (l, r) => if (l.relativeFitness > r.relativeFitness) l else r)
         (relativeFitness => relativeFitness/(fittest.relativeFitness))
+    }
+
+
+    // when we measure unfitness we want to promote the least unfit
+    def badnessNormalizer[A <: Genome[A]](candidates: IndexedSeq[Phenotype[A]]): (Double => Double) = {
+
+        val unfittest = candidates.reduceLeft( (l, r) => if (l.relativeFitness > r.relativeFitness) l else r)
+        (relativeFitness => 1.0 - relativeFitness/(unfittest.relativeFitness))
     }
 
 
@@ -112,19 +157,13 @@ object ParentSelection {
 
         // hastily clobbered together
         def search(low: Int, high: Int, target: Double): Phenotype[A] = {
-            // println("Searching for %1.2f between %d and %d".format(target, low, high))
             if (low == high - 1){
-                // println("Located target %1.2f at spot %d:".format(target, low))
-                // if (high > 0){ println(candidates(high - 1)) }
-                // println(candidates(high))
-                // if (high < 18){ println(candidates(high + 1)) }
-                // println()
                 candidates(high) 
             }
             else (low + high)/2 match {
                 case mid if candidates(mid).relativeFitness > target => search(low, mid, target)
                 case mid if candidates(mid).relativeFitness < target => search(mid, high, target)
-                case _ => candidates(high)
+                case _ => candidates(low)
             }
         }
         Vector.fill(spins)(search(0, candidates.size, Random.nextDouble))
