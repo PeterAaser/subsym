@@ -33,9 +33,12 @@ object Data {
             this.copy(relativeFitness = trueFitness)
     }
 
+    // case class Runner[A <: Genome[A]](
+    //     val control: Population[A] => (Population[A] => Population[A])
+    //     val initialize:
+    // )
 
     case class Params[A <: Genome[A]](val control: Population[A] => (Population[A] => Population[A]))
-
 
     case class Population[A <: Genome[A]](
         val adults: IndexedSeq[Phenotype[A]],

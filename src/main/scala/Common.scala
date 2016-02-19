@@ -18,9 +18,8 @@ import AdultSelection._
 object Representations {
 
     case class BitGene(bits: Vector[Int], crossRate: Double, mutationSeverity: Double) extends Gene[BitGene] {
-        def cross(g2: BitGene): (BitGene, BitGene) = {
 
-            // local effect only
+        def cross(g2: BitGene): (BitGene, BitGene) = {
             val (t1, t2) = (bits.toArray, g2.bits.toArray)
 
             for(i <- 0 until (bits.length*crossRate).toInt){
@@ -42,6 +41,11 @@ object Representations {
             copy(bits=t1.toVector)
         }
     }
+    object BitGene {
+        
+        def init(n: Int, crossRate: Int, mutationSeverity: Double): BitGene = 
+            BitGene(Vector.fill(n)(Random.nextInt(2)), crossRate, mutationSeverity)
+    }
 
 
     case class SingleBitGenome(gene: BitGene) extends Genome[SingleBitGenome] {
@@ -58,6 +62,13 @@ object Representations {
             else this
         }
     }
+    object SingleBitGenome {
+
+        def initPool(poolSize: Int, genomeSize: Int, crossRate: Int, mutationSeverity: Double): IndexedSeq[SingleBitGenome] = 
+            Vector.fill(poolSize)(SingleBitGenome(BitGene.init(genomeSize, crossRate, mutationSeverity)))
+    }
+
+
 
     case class SymbolGene(symbol: Int, s: Int) extends Gene[SymbolGene] {
         def cross(g2: SymbolGene): (SymbolGene, SymbolGene) =
@@ -65,6 +76,12 @@ object Representations {
         
         def mutate: SymbolGene = copy(symbol = Random.nextInt(s))
     }
+    object SymbolGene {
+
+        def init(s: Int): SymbolGene =
+            SymbolGene(Random.nextInt(s), s)
+    }
+
 
     case class SymbolGenome(genome: IndexedSeq[SymbolGene], crossRate: Double, mutationSeverity: Double) extends Genome[SymbolGenome] {
 
@@ -91,6 +108,10 @@ object Representations {
 
         override def toString: String = genome.map(_.symbol).mkString("[", "][", "]")
     }
+    // object SymbolGenome {
+
+    //     def init(s: 
+    // }
 }
 
 
