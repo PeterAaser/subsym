@@ -31,10 +31,8 @@ object GAsolver {
             println()
         }
 
-        val go = BitVecProblems.runner
+        val go = SymbolProblems.runner
         val done = go.solve(20)
-
-        // val sScale = done.adults
 
     }
 }

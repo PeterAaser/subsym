@@ -53,8 +53,10 @@ object Suprising {
 
     case class SubSeq(s1: Int, s2: Int, d: Int)
 
-    def maxUnique(length: Int, distance: Int): Int =
-        distance*(length - distance) + (distance*(distance - 1))/2
+    def maxUnique(length: Int, distance: Int): Int = {
+        val d = if(distance > length) length else distance 
+        d*( (length - 1) - d) + (d*(d + 1))/2
+    }
 
 
     def collect(h: SymbolGene, t: IndexedSeq[SymbolGene], d: Int): Set[SubSeq] = {
@@ -68,12 +70,12 @@ object Suprising {
             case h +: t => collect(h, t, s) ++ collectAll(t)
             case _ => Set[SubSeq]()
         }
-        candidate => (maxUnique(candidate.genome.length, s) - collectAll(candidate.genome).size).toDouble
+        candidate => (collectAll(candidate.genome).size.toDouble)/(maxUnique(candidate.genome.length, s))
     }
 }
 
 
-object Symbol {
+object SymbolProblems {
 
     def printList(s: Seq[_]): Unit = {
         println("-----------")
@@ -84,74 +86,37 @@ object Symbol {
     type Pheno = Phenotype[SymbolGenome]
     type Phenos = IndexedSeq[Pheno]
 
-    val distance = 1
-    val symbols = 3
-    val length = 10
+    val distance = 30
+    val symbols = 10
+    val length = 25
 
-    val adults = 20
+    val adults = 100
     val children = 20
     val crossRate = 0.2
-    val mutationRate = 0.4
-    val mutationSeverity = 0.3
+    val mutationRate = 0.6
+    val mutationSeverity = 0.6
 
     def evaluate(genome: SymbolGenome) = 
         Suprising.evaluator(distance)(genome)
 
-    def initializeGene(s: Int): SymbolGene =
-        SymbolGene(Random.nextInt(s), s)
-    
     def grow(genome: SymbolGenome): Pheno =
         Phenotype[SymbolGenome](genome, evaluate(genome), evaluate(genome), 0)
-
-    def initGenome: SymbolGenome =
-        SymbolGenome(Vector.fill(length)(initializeGene(symbols)), crossRate, mutationSeverity)
-
-    def initPhenotype: Pheno =
-        grow(initGenome)
-
-    def initPop: Phenos =
-        Vector.fill(adults)(initPhenotype)
-
-
-    val selectParents1: ( Int => ( Phenos => Phenos )) = 
-        p => (adults => {
-            val normalizer = Scaling.badnessNormalizer[SymbolGenome](_)
-            val sigma = Scaling.sigma[SymbolGenome](_)
-            val sScaled = Scaling.scale(adults, sigma)
-            val nScaled = Scaling.scale(sScaled, normalizer)
-            val rScaled = Scaling.rouletteScaler(nScaled)
-            val rouletted = ParentSelection.rouletteSelection(rScaled)(p)
-
-            println("Adults")
-            printList(adults)
-
-            println("sigma")
-            printList(sScaled)
-
-            println("normalized")
-            printList(nScaled)
-
-            println("roultte scaled")
-            printList(rScaled)
-
-            println("roulette winners")
-            printList(rouletted)
-
-            rouletted
-        })
-
 
     def reproduce(adults: Phenos): Vector[SymbolGenome] =
          sexualReproduction(mutationRate)(adults).toVector
 
-
     val evolutionStrategy = AdultSelection.full[SymbolGenome](
         adults,
-        selectParents1,
+        ParentSelection.tournamentStrat(_, 0.2, 9),
         reproduce,
         genomes => genomes.map(grow(_))
     )
 
+    val runner = Runner[SymbolGenome](
+        poolSize => SymbolGenome.initPool(poolSize, length, symbols, crossRate, mutationSeverity).map(grow(_)),
+        p => ( (p.fittest.trueFitness == 1.0) || (p.generation > 2000)),
+        evolutionStrategy
+    )
 }
 
 
@@ -171,16 +136,12 @@ object BitVecProblems {
     def grow(genome: SingleBitGenome): Pheno =
         Phenotype[SingleBitGenome](genome, LOLZ.evaluate(genome), LOLZ.evaluate(genome), 0) 
 
-    val selectParents2: ( Int => ( Phenos => Phenos)) = 
-        p => (adults => 
-            ParentSelection.tournamentSelection(adults, adults.length, 0.2, 4))
-
     def reproduce(adults: Phenos): Vector[SingleBitGenome] =
          sexualReproduction(mutationRate)(adults).toVector
 
     val evolutionStrategy = AdultSelection.full[SingleBitGenome](
         adults,
-        ParentSelection.rouletteStrat(_),
+        ParentSelection.tournamentStrat(_, 0.2, 4),
         reproduce,
         genomes => genomes.map(grow(_))
     )

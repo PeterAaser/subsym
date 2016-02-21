@@ -48,7 +48,7 @@ object Data {
                 nextPop.copy(generation = nextPop.generation + 1)
             }
             else{
-                println(nextPop.verbose)
+                println(nextPop)
                 run(nextPop.copy(generation = nextPop.generation + 1))
             }
         }
