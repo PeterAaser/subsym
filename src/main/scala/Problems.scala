@@ -152,11 +152,11 @@ object Symbol {
         genomes => genomes.map(grow(_))
     )
 
-    val population = Population[SymbolGenome](
-        initPop,
-        evolutionStrategy,
-        Controllers.Normal[SymbolGenome]
-    )
+    // val population = Population[SymbolGenome](
+    //     initPop,
+    //     evolutionStrategy,
+    //     Controllers.Normal[SymbolGenome]
+    // )
 }
 
 
@@ -216,10 +216,10 @@ object BitVecProblems {
         genomes => genomes.map(grow(_))
     )
 
-    val population = Population[SingleBitGenome](
-        initPop,
-        evolutionStrategy,
-        Controllers.Normal[SingleBitGenome]
-    )
+    // val population = Population[SingleBitGenome](
+    //     initPop,
+    //     evolutionStrategy,
+    //     Controllers.Normal[SingleBitGenome]
+    // )
 }
 

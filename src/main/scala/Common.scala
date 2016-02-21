@@ -43,7 +43,7 @@ object Representations {
     }
     object BitGene {
         
-        def init(n: Int, crossRate: Int, mutationSeverity: Double): BitGene = 
+        def init(n: Int, crossRate: Double, mutationSeverity: Double): BitGene = 
             BitGene(Vector.fill(n)(Random.nextInt(2)), crossRate, mutationSeverity)
     }
 
@@ -64,7 +64,7 @@ object Representations {
     }
     object SingleBitGenome {
 
-        def initPool(poolSize: Int, genomeSize: Int, crossRate: Int, mutationSeverity: Double): IndexedSeq[SingleBitGenome] = 
+        def initPool(poolSize: Int, genomeSize: Int, crossRate: Double, mutationSeverity: Double): IndexedSeq[SingleBitGenome] = 
             Vector.fill(poolSize)(SingleBitGenome(BitGene.init(genomeSize, crossRate, mutationSeverity)))
     }
 
@@ -108,10 +108,16 @@ object Representations {
 
         override def toString: String = genome.map(_.symbol).mkString("[", "][", "]")
     }
-    // object SymbolGenome {
+    object SymbolGenome {
 
-    //     def init(s: 
-    // }
+        def initGenome(genomeSize: Int, symbols: Int, crossRate: Double, mutationSeverity: Double): SymbolGenome = {
+            SymbolGenome(Vector.fill(genomeSize)(SymbolGene.init(symbols)), crossRate, mutationSeverity)
+        }
+
+        def init(poolSize: Int, genomeSize: Int, symbols: Int, crossRate: Double, mutationSeverity: Double): IndexedSeq[SymbolGenome] = {
+            Vector.fill(poolSize)(SymbolGenome.initGenome(genomeSize, symbols, crossRate, mutationSeverity))
+        }
+    }
 }
 
 
@@ -324,3 +330,5 @@ object Controllers {
     }
 
 }
+
+

@@ -33,38 +33,44 @@ object Data {
             this.copy(relativeFitness = trueFitness)
     }
 
-    // case class Runner[A <: Genome[A]](
-    //     val control: Population[A] => (Population[A] => Population[A])
-    //     val initialize:
-    // )
+    case class Runner[A <: Genome[A]](
+        val initialize: Int => Population[A],
+        val done: Population[A] => Boolean,
+        val modify: ((Population[A] => Population[A]), Population[A]) => (Population[A] => Population[A]),
+        val evolve: Population[A] => Population[A]
+    ){
+        def run(p: Population[A]): (Runner[A], Population[A]) = {
+            val nextEvolve = modify(evolve, p) 
+            val nextPop = evolve(p)
+            val finished = done(nextPop)
+            val nextRunner = this.copy(evolve = nextEvolve)
+            if(finished)
+                (this, p)
+            else
+                nextRunner.run(nextPop)
+        }
+    }
 
     case class Params[A <: Genome[A]](val control: Population[A] => (Population[A] => Population[A]))
 
     case class Population[A <: Genome[A]](
         val adults: IndexedSeq[Phenotype[A]],
-        val evolve: Population[A] => Population[A],
-        val strat: Strategy[A]
+        val generation: Int
     ){
 
-        def next = evolve(this)
+        def fittest: Phenotype[A] = 
+            adults.maxBy(_.trueFitness)
 
-        def run(n: Int): Population[A] = {
-            println(this.verbose)
-            if(n > 1){
-                val evo = next
-                evo.run(n - 1)
-            }
-            else
-                this
-        }
+        def averageFitness: Double =
+            ((0.0 /: adults.map(_.trueFitness))(_+_))/adults.length
 
         def verbose: String = {
             "Population --- \n" +
             adults.mkString("\n") + "\n\n" +
             "Avg fitness: " +
-            ((0.0 /: adults.map(_.trueFitness))(_+_))/adults.length + 
+            averageFitness.toString +
             "\nBest fit \n: " +
-            (if (adults.isEmpty) "n/a" else adults.maxBy(_.trueFitness).trueFitness)
+            fittest
         }
 
         override def toString: String = {
