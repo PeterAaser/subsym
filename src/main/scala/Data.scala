@@ -19,9 +19,6 @@ object Data {
         def mutate(rate: Double): A
     }
 
-    trait Strategy[A <: Genome[A]] {
-        def evolve(p: Population[A]): Population[A]
-    }
 
     case class Phenotype[A <: Genome[A]](
         genome: A,
@@ -33,51 +30,59 @@ object Data {
             this.copy(relativeFitness = trueFitness)
     }
 
+
     case class Runner[A <: Genome[A]](
-        val initialize: Int => Population[A],
+        val initPop: Int => IndexedSeq[Phenotype[A]],
         val done: Population[A] => Boolean,
-        val modify: ((Population[A] => Population[A]), Population[A]) => (Population[A] => Population[A]),
         val evolve: Population[A] => Population[A]
     ){
-        def run(p: Population[A]): (Runner[A], Population[A]) = {
-            val nextEvolve = modify(evolve, p) 
+        
+        def solve(poolSize: Int): Population[A] =
+            run(Population(initPop(poolSize), 0))
+
+        def run(p: Population[A]): Population[A] = {
             val nextPop = evolve(p)
             val finished = done(nextPop)
-            val nextRunner = this.copy(evolve = nextEvolve)
-            if(finished)
-                (this, p)
-            else
-                nextRunner.run(nextPop)
+            if(finished){
+                println(nextPop.verbose)
+                nextPop.copy(generation = nextPop.generation + 1)
+            }
+            else{
+                println(nextPop.verbose)
+                run(nextPop.copy(generation = nextPop.generation + 1))
+            }
         }
     }
-
-    case class Params[A <: Genome[A]](val control: Population[A] => (Population[A] => Population[A]))
 
     case class Population[A <: Genome[A]](
         val adults: IndexedSeq[Phenotype[A]],
         val generation: Int
     ){
 
-        def fittest: Phenotype[A] = 
-            adults.maxBy(_.trueFitness)
+        def fittest: Phenotype[A] =
+            adults.reduceLeft( (l, r) => if (l.trueFitness > r.trueFitness) l else r)
 
         def averageFitness: Double =
             ((0.0 /: adults.map(_.trueFitness))(_+_))/adults.length
 
-        def verbose: String = {
-            "Population --- \n" +
-            adults.mkString("\n") + "\n\n" +
-            "Avg fitness: " +
-            averageFitness.toString +
-            "\nBest fit \n: " +
-            fittest
-        }
 
-        override def toString: String = {
-            "Avg fitness: " +
+        def verbose: String = {
+            "\n\nGeneration: " + generation +
+            "\nAvg fitness: " +
             ((0.0 /: adults.map(_.trueFitness))(_+_))/adults.length +
             "\nBest fit \n: " +
-            (if (adults.isEmpty) "n/a" else adults.maxBy(_.trueFitness).trueFitness)
+            fittest +
+            "\nPopulation --- \n" +
+            adults.mkString("\n") + "\n\n"
+        }
+
+
+        override def toString: String = {
+            "\n\nGeneration: " + generation +
+            "\nAvg fitness: " +
+            ((0.0 /: adults.map(_.trueFitness))(_+_))/adults.length +
+            "\nBest fit \n: " +
+            fittest
         }
     }
 }

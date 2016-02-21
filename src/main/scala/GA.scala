@@ -31,8 +31,8 @@ object GAsolver {
             println()
         }
 
-        // val testPop = Symbol.population
-        // val done = testPop.run(100)
+        val go = BitVecProblems.runner
+        val done = go.solve(20)
 
         // val sScale = done.adults
 

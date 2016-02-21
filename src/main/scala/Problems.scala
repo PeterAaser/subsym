@@ -152,74 +152,43 @@ object Symbol {
         genomes => genomes.map(grow(_))
     )
 
-    // val population = Population[SymbolGenome](
-    //     initPop,
-    //     evolutionStrategy,
-    //     Controllers.Normal[SymbolGenome]
-    // )
 }
 
 
 
 object BitVecProblems {
 
-
     type Pheno = Phenotype[SingleBitGenome]
     type Phenos = IndexedSeq[Pheno]
 
     val problemSize = 30
-    val adults = 20
+    val adults = 30
     val children = 20
-    val crossrate = 0.2
+    val crossRate = 0.2
     val mutationRate = 0.4
     val mutationSeverity = 0.3
-
-    def initializeGene(n: Int): BitGene = {
-        BitGene(Vector.fill(n)(Random.nextInt(2)), crossrate, mutationSeverity)
-    }
 
     def grow(genome: SingleBitGenome): Pheno =
         Phenotype[SingleBitGenome](genome, LOLZ.evaluate(genome), LOLZ.evaluate(genome), 0) 
 
-    def initGenome: SingleBitGenome =
-        SingleBitGenome(initializeGene(problemSize))
-
-    def initPhenotype: Pheno =
-        grow(initGenome)
-
-    def initPop: Phenos = 
-        Vector.fill(adults)(initPhenotype)
-
-    val selectParents1: ( Int => ( Phenos => Phenos )) = 
-        p => (adults => {
-            val normalizer = Scaling.normalizer[SingleBitGenome](_)
-            val sigma = Scaling.sigma[SingleBitGenome](_)
-            val sScaled = Scaling.scale(adults, sigma)
-            val nScaled = Scaling.scale(sScaled, normalizer)
-            val rScaled = Scaling.rouletteScaler(nScaled)
-            val rouletted = ParentSelection.rouletteSelection(rScaled)(p)
-            rouletted
-        })
-
     val selectParents2: ( Int => ( Phenos => Phenos)) = 
         p => (adults => 
             ParentSelection.tournamentSelection(adults, adults.length, 0.2, 4))
-        
 
     def reproduce(adults: Phenos): Vector[SingleBitGenome] =
          sexualReproduction(mutationRate)(adults).toVector
 
     val evolutionStrategy = AdultSelection.full[SingleBitGenome](
         adults,
-        selectParents1,
+        ParentSelection.rouletteStrat(_),
         reproduce,
         genomes => genomes.map(grow(_))
     )
 
-    // val population = Population[SingleBitGenome](
-    //     initPop,
-    //     evolutionStrategy,
-    //     Controllers.Normal[SingleBitGenome]
-    // )
+    val runner = Runner[SingleBitGenome](
+        poolSize => SingleBitGenome.initPool(adults, poolSize, crossRate, mutationSeverity).map(grow(_)),
+        p => ( (p.fittest.trueFitness > 19.0) || (p.generation > 100)),
+        evolutionStrategy
+    )
 }
 

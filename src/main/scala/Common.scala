@@ -233,6 +233,20 @@ object ParentSelection {
         }
         collect(items toVector, sampleSize, Nil)
     }
+
+    def rouletteStrat[A <: Genome[A]](winners: Int): IndexedSeq[Phenotype[A]] => IndexedSeq[Phenotype[A]] =
+        adults => {
+            val Snormalizer = normalizer[A](_)
+            val Ssigma = sigma[A](_)
+            val sScaled = scale(adults, Ssigma)
+            val nScaled = scale(sScaled, Snormalizer)
+            val rScaled = rouletteScaler(nScaled)
+            val rouletted = ParentSelection.rouletteSelection(rScaled)(winners)
+            rouletted
+        }
+
+    def tournamentStrat[A <: Genome[A]](epsilon: Double, contestants: Int): (IndexedSeq[Phenotype[A]] => IndexedSeq[Phenotype[A]]) =
+        adults => tournamentSelection(adults, adults.length, epsilon, contestants)
 }
 
 
@@ -322,13 +336,3 @@ object AdultSelection {
             pop.copy(adults = survivors)
         }
 }
-
-object Controllers {
-
-    case class Normal[A <: Genome[A]]() extends Strategy[A] {
-        def evolve(p: Population[A]): Population[A] = p
-    }
-
-}
-
-
