@@ -74,6 +74,42 @@ object Suprising {
     }
 }
 
+object ParamSearch {
+
+    val adults = 20
+    val symbols = 10
+    val length = 21
+    val generations = 100
+
+    def trial(runner: Runner[SymbolGenome]): Double = {
+        println("Trial commencing")
+        val result = runner.solve(20)
+        if(result._1.generation < generations) {
+            1.0
+        }
+        else{
+            val metrics = result._2.unzip
+            val average = metrics._1
+            val best = metrics._2
+            
+            ((average.sum/generations) + (best.sum/generations))/2.0
+        }
+    }
+
+    def evaluate: (ParamGenome => Double) = 
+        params => {
+            
+            val testRunner = Suprise.symbolRunner(30, 10, 23, 100, 100, 
+                params.genome(0).real,
+                params.genome(1).real,
+                params.genome(2).real
+            )
+
+            Vector.fill(3)(trial(testRunner)).sum
+        }
+
+}
+
 
 object SymbolProblems {
 
@@ -88,11 +124,11 @@ object SymbolProblems {
 
     val distance = 30
     val symbols = 10
-    val length = 25
+    val length = 23
 
     val adults = 100
     val children = 20
-    val crossRate = 0.2
+    val crossRate = 0.3
     val mutationRate = 0.6
     val mutationSeverity = 0.6
 
@@ -107,14 +143,14 @@ object SymbolProblems {
 
     val evolutionStrategy = AdultSelection.full[SymbolGenome](
         adults,
-        ParentSelection.tournamentStrat(_, 0.2, 9),
+        ParentSelection.rouletteStrat(_),
         reproduce,
         genomes => genomes.map(grow(_))
     )
 
     val runner = Runner[SymbolGenome](
         poolSize => SymbolGenome.initPool(poolSize, length, symbols, crossRate, mutationSeverity).map(grow(_)),
-        p => ( (p.fittest.trueFitness == 1.0) || (p.generation > 2000)),
+        p => ( (p.fittest.trueFitness == 1.0) || (p.generation > 500)),
         evolutionStrategy
     )
 }

@@ -121,4 +121,50 @@ object Representations {
             Vector.fill(poolSize)(SymbolGenome.initGenome(genomeSize, symbols, crossRate, mutationSeverity))
         }
     }
+
+
+
+    case class RealGene(real: Double) extends Gene[RealGene] {
+
+        def cross(g2: RealGene): (RealGene, RealGene) =
+            (g2, this)
+
+        def mutate: RealGene = 
+            copy(real = Random.nextDouble)
+    }
+    object RealGene {
+        def init: RealGene = RealGene(Random.nextDouble)
+    }
+
+
+    case class ParamGenome(genome: IndexedSeq[RealGene], crossRate: Double, mutationSeverity: Double) extends Genome[ParamGenome] {
+
+        def cross(genome2: ParamGenome): (ParamGenome, ParamGenome) = {
+            val (t1, t2) = (genome.toArray, genome2.genome.toArray)
+            for(i <- 0 until(genome.length*crossRate).toInt){
+                val crossPoint = Random.nextInt(genome.length - 1)
+                val (g1, g2) = t1(crossPoint).cross(t2(crossPoint))
+                t1(crossPoint) = g2
+                t2(crossPoint) = g1
+            }
+            (copy(genome=t1.toVector), genome2.copy(genome=t2.toVector))
+        }
+
+        def mutate(rate: Double): ParamGenome = {
+            val t1 = genome.toArray
+
+            for(i <- 0 until (genome.length*crossRate).toInt){
+                val mPoint = Random.nextInt(genome.length)
+                t1(mPoint) = t1(mPoint).mutate
+            }
+            copy(genome=t1.toVector)
+        }
+    }
+    object ParamGenome {
+
+        def initPool(poolSize: Int, numParams: Int, crossRate: Double, mutationSeverity: Double): IndexedSeq[ParamGenome] = {
+            Vector.fill(poolSize)(ParamGenome(Vector.fill(numParams)(RealGene.init), crossRate, mutationSeverity))
+        }
+
+    }
 }

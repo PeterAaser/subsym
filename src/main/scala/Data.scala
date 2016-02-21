@@ -37,19 +37,22 @@ object Data {
         val evolve: Population[A] => Population[A]
     ){
         
-        def solve(poolSize: Int): Population[A] =
-            run(Population(initPop(poolSize), 0))
+        def solve(poolSize: Int): (Population[A], List[(Double, Double)]) =
+            run(Population(initPop(poolSize), 0), List[(Double, Double)]())
 
-        def run(p: Population[A]): Population[A] = {
+        def run(p: Population[A], log: List[(Double, Double)] ): (Population[A], List[(Double, Double)]) = {
             val nextPop = evolve(p)
             val finished = done(nextPop)
+            val best = nextPop.fittest.trueFitness
+            val avg = nextPop.averageFitness
+
             if(finished){
                 println(nextPop.verbose)
-                nextPop.copy(generation = nextPop.generation + 1)
+                (nextPop.copy(generation = nextPop.generation + 1), (avg, best) :: log)
             }
             else{
                 println(nextPop)
-                run(nextPop.copy(generation = nextPop.generation + 1))
+                run(nextPop.copy(generation = nextPop.generation + 1), (avg, best) :: log)
             }
         }
     }
