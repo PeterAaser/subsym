@@ -14,8 +14,15 @@ import Reproduction._
 import ParentSelection._
 import Suprise._
 
+import scala.io.Source
+import org.sameersingh.scalaplot._
+import gnuplot.GnuplotPlotter
+import jfreegraph.JFGraphPlotter
 
 import reflect.runtime.universe._
+
+import spray.json._
+import DefaultJsonProtocol._
 
 object GAsolver {
 
@@ -26,26 +33,50 @@ object GAsolver {
 
     def main(args: Array[String]): Unit = {
 
-        def printList(s: Seq[_]): Unit = {
-            println("-----------")
-            s.foreach(println(_))
-            println()
+        val problemString = Source.fromFile("presets/problem.json").getLines.mkString
+        val problem = problemString.parseJson.convertTo[Map[String, JsValue]]
+
+        def parseProblem(p: String) = {
+            val problemString = Source.fromFile("presets/" + p + ".json").getLines.mkString 
+            val problem = problemString.parseJson.convertTo[Map[String, JsValue]]
+            val problemType = ((problem get "problem") match { case Some(JsString(j)) => j })
+
+            problemType match {
+                case "symbol" => parseSymbol(problem)
+                case "LOLZ" => None
+                case _ => None
+            }
         }
 
-        val go = ParamRun.paramRunner(
-            30,
-            30,
-            0.2,
-            0.2,
-            0.2
-        )
+        def parseSymbol(p: Map[String, JsValue]): Runner[SymbolGenome] = {
+            val length = ((p get "length") match { case Some(JsNumber(v)) => v })
+            val distance = ((p get "distance") match { 
+                case Some(JsNumber(v)) => v
+                case Some(JsString(s)) => length
+            })
+            val symbols = ((p get "symbols") match { case Some(JsNumber(v)) => v })
+            val adults = ((p get "adults") match { case Some(JsNumber(v)) => v })
+            val crossRate = ((p get "crossRate") match { case Some(JsNumber(v)) => v })
+            val mutationRate = ((p get "mutationRate") match { case Some(JsNumber(v)) => v })
+            val mutationSeverity = ((p get "mutationSeverity") match { case Some(JsNumber(v)) => v })
+            
+            Suprise.symbolRunner(
+                distance.toInt,
+                symbols.toInt,
+                length.toInt,
+                adults.toInt,
+                crossRate.toDouble,
+                mutationRate.toDouble,
+                mutationSeverity.toDouble)
+        }
 
-        println("runner acquired")
-
-        val done = go.solve(20)
-        println(done._2.head)
-        println(done._2(5))
-
+        println(parseProblem("problem"))
+        val runner = parseProblem("problem") match {
+            case f: Runner[SymbolGenome] => f.solve(30) 
+            case f: Runner[SingleBitGenome] => f.solve(30)
+        }
+        
+        
     }
 }
 
@@ -62,7 +93,6 @@ object Suprise {
         length: Int,
 
         adults: Int,
-        children: Int,
         crossRate: Double,
         mutationRate: Double,
         mutationSeverity: Double): Runner[SymbolGenome] = {
@@ -78,14 +108,14 @@ object Suprise {
 
             val evolutionStrategy = AdultSelection.full[SymbolGenome](
                 adults,
-                ParentSelection.rouletteStrat(_),
+                ParentSelection.tournamentStrat(_, 0.9, 8),
                 reproduce,
                 genomes => genomes.map(grow(_))
             )
 
             val runner = Runner[SymbolGenome](
                 poolSize => SymbolGenome.initPool(poolSize, length, symbols, crossRate, mutationSeverity).map(grow(_)),
-                p => ( (p.fittest.trueFitness == 1.0) || (p.generation > 50)),
+                p => ( (p.fittest.trueFitness == 1.0) || (p.generation > 500)),
                 evolutionStrategy
             )
             

@@ -99,7 +99,7 @@ object ParamSearch {
     def evaluate: (ParamGenome => Double) = 
         params => {
             
-            val testRunner = Suprise.symbolRunner(30, 10, 23, 100, 100, 
+            val testRunner = Suprise.symbolRunner(30, 10, 23, 100, 
                 params.genome(0).real,
                 params.genome(1).real,
                 params.genome(2).real
