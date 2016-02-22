@@ -32,13 +32,13 @@ object Data {
 
 
     case class Runner[A <: Genome[A]](
-        val initPop: Int => IndexedSeq[Phenotype[A]],
+        val initPop: IndexedSeq[Phenotype[A]],
         val done: Population[A] => Boolean,
         val evolve: Population[A] => Population[A]
     ){
         
-        def solve(poolSize: Int): (Population[A], List[(Double, Double)]) =
-            run(Population(initPop(poolSize), 0), List[(Double, Double)]())
+        def solve: (Population[A], List[(Double, Double)]) =
+            run(Population(initPop, 0), List[(Double, Double)]())
 
         def run(p: Population[A], log: List[(Double, Double)] ): (Population[A], List[(Double, Double)]) = {
             val nextPop = evolve(p)

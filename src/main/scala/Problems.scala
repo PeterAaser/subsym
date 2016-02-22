@@ -51,62 +51,85 @@ object LOLZ {
 
 object Suprising {
 
+    import scala.collection.mutable.HashSet
+
     case class SubSeq(s1: Int, s2: Int, d: Int)
 
+    // I think this caches
     def maxUnique(length: Int, distance: Int): Int = {
         val d = if(distance > length) length else distance 
         d*( (length - 1) - d) + (d*(d + 1))/2
     }
 
-
-    def collect(h: SymbolGene, t: IndexedSeq[SymbolGene], d: Int): Set[SubSeq] = {
+    def collect(h: SymbolGene, t: IndexedSeq[SymbolGene], d: Int, found: HashSet[SubSeq]){
         val successors = (t take d).zipWithIndex
-        val subSequences = successors.map( { case (s, i) => SubSeq(h.symbol, s.symbol, i) } )
-        (Set[SubSeq]() /: subSequences)(_+_)
+        successors.toList.foreach( { case (s, i) => found += SubSeq(h.symbol, s.symbol, i) } )
     }
+
 
     def evaluator(s: Int): (SymbolGenome => Double) = {
-        def collectAll(g: IndexedSeq[SymbolGene]): Set[SubSeq] = g match {
-            case h +: t => collect(h, t, s) ++ collectAll(t)
-            case _ => Set[SubSeq]()
+        def collectAll(g: IndexedSeq[SymbolGene], found: HashSet[SubSeq]): Unit = { 
+            g match {
+                case h +: t => collect(h, t, s, found); collectAll(t, found)
+                case _ => ()
+            }
         }
-        candidate => (collectAll(candidate.genome).size.toDouble)/(maxUnique(candidate.genome.length, s))
+        val found = HashSet[SubSeq]()
+        candidate => {
+            collectAll(candidate.genome, found)
+            // println(found.size)
+            found.size.toDouble/(maxUnique(candidate.genome.length, s))
+        }
     }
+
+    // def collect(h: SymbolGene, t: IndexedSeq[SymbolGene], d: Int): List[SubSeq] = {
+    //     val successors = (t take d).zipWithIndex
+    //     successors.toList.map( { case (s, i) => SubSeq(h.symbol, s.symbol, i) } )
+    // }
+
+
+    // def evaluator(s: Int): (SymbolGenome => Double) = {
+    //     def collectAll(g: IndexedSeq[SymbolGene]): List[SubSeq] = g match {
+    //         case h +: t => collect(h, t, s) ::: collectAll(t)
+    //         case _ => List[SubSeq]()
+    //     }
+    //     candidate => (collectAll(candidate.genome).toSet.size.toDouble)/(maxUnique(candidate.genome.length, s))
+    // }
 }
 
 object ParamSearch {
 
-    val adults = 20
-    val symbols = 10
-    val length = 21
-    val generations = 100
+    // val adults = 20
+    // val symbols = 10
+    // val length = 21
+    // val generations = 100
 
-    def trial(runner: Runner[SymbolGenome]): Double = {
-        println("Trial commencing")
-        val result = runner.solve(20)
-        if(result._1.generation < generations) {
-            1.0
-        }
-        else{
-            val metrics = result._2.unzip
-            val average = metrics._1
-            val best = metrics._2
-            
-            ((average.sum/generations) + (best.sum/generations))/2.0
-        }
-    }
+    // def trial(runner: Runner[SymbolGenome]): Double = {
+    //     println("Trial commencing")
+    //     val result = runner.solve(20)
+    //     if(result._1.generation < generations) {
+    //         1.0
+    //     }
+    //     else{
+    //         val metrics = result._2.unzip
+    //         val average = metrics._1
+    //         val best = metrics._2
+    //         
+    //         ((average.sum/generations) + (best.sum/generations))/2.0
+    //     }
+    // }
 
-    def evaluate: (ParamGenome => Double) = 
-        params => {
-            
-            val testRunner = Suprise.symbolRunner(30, 10, 23, 100, 
-                params.genome(0).real,
-                params.genome(1).real,
-                params.genome(2).real
-            )
+    // def evaluate: (ParamGenome => Double) = 
+    //     params => {
+    //         
+    //         val testRunner = Suprise.symbolRunner(30, 10, 23, 100, 
+    //             params.genome(0).real,
+    //             params.genome(1).real,
+    //             params.genome(2).real
+    //         )
 
-            Vector.fill(3)(trial(testRunner)).sum
-        }
+    //         Vector.fill(3)(trial(testRunner)).sum
+    //     }
 
 }
 
@@ -148,11 +171,11 @@ object SymbolProblems {
         genomes => genomes.map(grow(_))
     )
 
-    val runner = Runner[SymbolGenome](
-        poolSize => SymbolGenome.initPool(poolSize, length, symbols, crossRate, mutationSeverity).map(grow(_)),
-        p => ( (p.fittest.trueFitness == 1.0) || (p.generation > 500)),
-        evolutionStrategy
-    )
+    // val runner = Runner[SymbolGenome](
+    //     poolSize => SymbolGenome.initPool(poolSize, length, symbols.toByte, crossRate, mutationSeverity).map(grow(_)),
+    //     p => ( (p.fittest.trueFitness == 1.0) || (p.generation > 500)),
+    //     evolutionStrategy
+    // )
 }
 
 
@@ -182,10 +205,10 @@ object BitVecProblems {
         genomes => genomes.map(grow(_))
     )
 
-    val runner = Runner[SingleBitGenome](
-        poolSize => SingleBitGenome.initPool(adults, poolSize, crossRate, mutationSeverity).map(grow(_)),
-        p => ( (p.fittest.trueFitness > 19.0) || (p.generation > 100)),
-        evolutionStrategy
-    )
+    // val runner = Runner[SingleBitGenome](
+    //     poolSize => SingleBitGenome.initPool(adults, poolSize, crossRate, mutationSeverity).map(grow(_)),
+    //     p => ( (p.fittest.trueFitness > 19.0) || (p.generation > 100)),
+    //     evolutionStrategy
+    // )
 }
 

@@ -62,7 +62,7 @@ object GAsolver {
             
             Suprise.symbolRunner(
                 distance.toInt,
-                symbols.toInt,
+                symbols.toByte,
                 length.toInt,
                 adults.toInt,
                 crossRate.toDouble,
@@ -72,8 +72,8 @@ object GAsolver {
 
         println(parseProblem("problem"))
         val runner = parseProblem("problem") match {
-            case f: Runner[SymbolGenome] => f.solve(30) 
-            case f: Runner[SingleBitGenome] => f.solve(30)
+            case f: Runner[SymbolGenome] => f.solve
+            case f: Runner[SingleBitGenome] => f.solve
         }
         
         
@@ -89,7 +89,7 @@ object Suprise {
 
     def symbolRunner(
         distance: Int,
-        symbols: Int,
+        symbols: Byte,
         length: Int,
 
         adults: Int,
@@ -110,11 +110,14 @@ object Suprise {
                 adults,
                 ParentSelection.tournamentStrat(_, 0.9, 8),
                 reproduce,
-                genomes => genomes.map(grow(_))
+                genomes => {
+                    val a = genomes.par.map(grow(_))
+                    a.toVector
+                }
             )
 
             val runner = Runner[SymbolGenome](
-                poolSize => SymbolGenome.initPool(poolSize, length, symbols, crossRate, mutationSeverity).map(grow(_)),
+                SymbolGenome.initPool(adults, length, symbols, crossRate, mutationSeverity).map(grow(_)),
                 p => ( (p.fittest.trueFitness == 1.0) || (p.generation > 500)),
                 evolutionStrategy
             )
@@ -125,44 +128,43 @@ object Suprise {
 
 object ParamRun {
 
-    import ParamSearch._
+    // import ParamSearch._
 
-    type Pheno = Phenotype[ParamGenome]
-    type Phenos = IndexedSeq[Pheno]
+    // type Pheno = Phenotype[ParamGenome]
+    // type Phenos = IndexedSeq[Pheno]
 
-    def paramRunner(
-        adults: Int,
-        children: Int,
-        crossRate: Double,
-        mutationRate: Double,
-        mutationSeverity: Double): Runner[ParamGenome] = {
+    // def paramRunner(
+    //     adults: Int,
+    //     crossRate: Double,
+    //     mutationRate: Double,
+    //     mutationSeverity: Double): Runner[ParamGenome] = {
 
-            def evaluate(genome: ParamGenome) = 
-                ParamSearch.evaluate(genome)
+    //         def evaluate(genome: ParamGenome) = 
+    //             ParamSearch.evaluate(genome)
 
-            def grow(genome: ParamGenome): Pheno = {
-                val v = evaluate(genome)
-                Phenotype[ParamGenome](genome, v, v, 0)
-            }
+    //         def grow(genome: ParamGenome): Pheno = {
+    //             val v = evaluate(genome)
+    //             Phenotype[ParamGenome](genome, v, v, 0)
+    //         }
 
-            def reproduce(adults: Phenos): Vector[ParamGenome] =
-                 sexualReproduction(mutationRate)(adults).toVector
+    //         def reproduce(adults: Phenos): Vector[ParamGenome] =
+    //              sexualReproduction(mutationRate)(adults).toVector
 
-            val evolutionStrategy = AdultSelection.full[ParamGenome](
-                adults,
-                ParentSelection.tournamentStrat(_, 0.2, 9),
-                reproduce,
-                genomes => genomes.map(grow(_))
-            )
+    //         val evolutionStrategy = AdultSelection.full[ParamGenome](
+    //             adults,
+    //             ParentSelection.tournamentStrat(_, 0.2, 9),
+    //             reproduce,
+    //             genomes => genomes.map(grow(_))
+    //         )
 
-            val runner = Runner[ParamGenome](
-                poolSize => ParamGenome.initPool(poolSize, 3, crossRate, mutationSeverity).map(grow(_)),
-                p => ( (p.fittest.trueFitness == 1.0) || (p.generation > 40)),
-                evolutionStrategy
-            )
-            
-            runner
-    }
+    //         val runner = Runner[ParamGenome](
+    //             ParamGenome.initPool(adults, 3, crossRate, mutationSeverity).map(grow(_)),
+    //             p => ( (p.fittest.trueFitness == 1.0) || (p.generation > 40)),
+    //             evolutionStrategy
+    //         )
+    //         
+    //         runner
+    // }
 }
 
 

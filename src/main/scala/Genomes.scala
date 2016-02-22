@@ -71,16 +71,16 @@ object Representations {
 
 
 
-    case class SymbolGene(symbol: Int, s: Int) extends Gene[SymbolGene] {
+    case class SymbolGene(symbol: Byte, s: Byte) extends Gene[SymbolGene] {
         def cross(g2: SymbolGene): (SymbolGene, SymbolGene) =
             (g2, this)
         
-        def mutate: SymbolGene = copy(symbol = Random.nextInt(s))
+        def mutate: SymbolGene = copy(symbol = Random.nextInt(s).toByte)
     }
     object SymbolGene {
 
-        def init(s: Int): SymbolGene =
-            SymbolGene(Random.nextInt(s), s)
+        def init(s: Byte): SymbolGene =
+            SymbolGene(Random.nextInt(s).toByte, s)
     }
 
 
@@ -113,11 +113,11 @@ object Representations {
     }
     object SymbolGenome {
 
-        def initGenome(genomeSize: Int, symbols: Int, crossRate: Double, mutationSeverity: Double): SymbolGenome = {
+        def initGenome(genomeSize: Int, symbols: Byte, crossRate: Double, mutationSeverity: Double): SymbolGenome = {
             SymbolGenome(Vector.fill(genomeSize)(SymbolGene.init(symbols)), crossRate, mutationSeverity)
         }
 
-        def initPool(poolSize: Int, genomeSize: Int, symbols: Int, crossRate: Double, mutationSeverity: Double): IndexedSeq[SymbolGenome] = {
+        def initPool(poolSize: Int, genomeSize: Int, symbols: Byte, crossRate: Double, mutationSeverity: Double): IndexedSeq[SymbolGenome] = {
             Vector.fill(poolSize)(SymbolGenome.initGenome(genomeSize, symbols, crossRate, mutationSeverity))
         }
     }
