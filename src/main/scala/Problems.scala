@@ -77,11 +77,12 @@ object Suprising {
         val found = HashSet[SubSeq]()
         candidate => {
             collectAll(candidate.genome, found)
-            // println(found.size)
             found.size.toDouble/(maxUnique(candidate.genome.length, s))
         }
     }
 
+    // Immutable version
+    // 
     // def collect(h: SymbolGene, t: IndexedSeq[SymbolGene], d: Int): List[SubSeq] = {
     //     val successors = (t take d).zipWithIndex
     //     successors.toList.map( { case (s, i) => SubSeq(h.symbol, s.symbol, i) } )
@@ -133,77 +134,30 @@ object ParamSearch {
 
 }
 
-
-object SymbolProblems {
-
-    def printList(s: Seq[_]): Unit = {
-        println("-----------")
-        s.foreach(println(_))
-        println()
-    }
-
-    type Pheno = Phenotype[SymbolGenome]
-    type Phenos = IndexedSeq[Pheno]
-
-    val distance = 30
-    val symbols = 10
-    val length = 23
-
-    val adults = 100
-    val children = 20
-    val crossRate = 0.3
-    val mutationRate = 0.6
-    val mutationSeverity = 0.6
-
-    def evaluate(genome: SymbolGenome) = 
-        Suprising.evaluator(distance)(genome)
-
-    def grow(genome: SymbolGenome): Pheno =
-        Phenotype[SymbolGenome](genome, evaluate(genome), evaluate(genome), 0)
-
-    def reproduce(adults: Phenos): Vector[SymbolGenome] =
-         sexualReproduction(mutationRate)(adults).toVector
-
-    val evolutionStrategy = AdultSelection.full[SymbolGenome](
-        adults,
-        ParentSelection.rouletteStrat(_),
-        reproduce,
-        genomes => genomes.map(grow(_))
-    )
-
-    // val runner = Runner[SymbolGenome](
-    //     poolSize => SymbolGenome.initPool(poolSize, length, symbols.toByte, crossRate, mutationSeverity).map(grow(_)),
-    //     p => ( (p.fittest.trueFitness == 1.0) || (p.generation > 500)),
-    //     evolutionStrategy
-    // )
-}
-
-
-
 object BitVecProblems {
 
-    type Pheno = Phenotype[SingleBitGenome]
-    type Phenos = IndexedSeq[Pheno]
+    // type Pheno = Phenotype[SingleBitGenome]
+    // type Phenos = IndexedSeq[Pheno]
 
-    val problemSize = 30
-    val adults = 30
-    val children = 20
-    val crossRate = 0.2
-    val mutationRate = 0.4
-    val mutationSeverity = 0.3
+    // val problemSize = 30
+    // val adults = 30
+    // val children = 20
+    // val crossRate = 0.2
+    // val mutationRate = 0.4
+    // val mutationSeverity = 0.3
 
-    def grow(genome: SingleBitGenome): Pheno =
-        Phenotype[SingleBitGenome](genome, LOLZ.evaluate(genome), LOLZ.evaluate(genome), 0) 
+    // def grow(genome: SingleBitGenome): Pheno =
+    //     Phenotype[SingleBitGenome](genome, LOLZ.evaluate(genome), LOLZ.evaluate(genome), 0) 
 
-    def reproduce(adults: Phenos): Vector[SingleBitGenome] =
-         sexualReproduction(mutationRate)(adults).toVector
+    // def reproduce(adults: Phenos): Vector[SingleBitGenome] =
+    //      sexualReproduction(mutationRate)(adults).toVector
 
-    val evolutionStrategy = AdultSelection.full[SingleBitGenome](
-        adults,
-        ParentSelection.tournamentStrat(_, 0.2, 4),
-        reproduce,
-        genomes => genomes.map(grow(_))
-    )
+    // val evolutionStrategy = AdultSelection.full[SingleBitGenome](
+    //     adults,
+    //     ParentSelection.tournamentStrat(_, 0.2, 4),
+    //     reproduce,
+    //     genomes => genomes.map(grow(_))
+    // )
 
     // val runner = Runner[SingleBitGenome](
     //     poolSize => SingleBitGenome.initPool(adults, poolSize, crossRate, mutationSeverity).map(grow(_)),

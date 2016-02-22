@@ -192,10 +192,8 @@ object AdultSelection {
         grow: IndexedSeq[A] => IndexedSeq[Phenotype[A]]
     ): Population[A] => Population[A] =
         pop => {
-            println("Selecting parents")
             val parents = parentSel( µ )(pop.adults)
 
-            println("growing children")
             val children = grow(reproductionScheme(parents))
             pop.copy(adults = children)
         }
