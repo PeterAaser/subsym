@@ -19,8 +19,6 @@ import org.sameersingh.scalaplot._
 import gnuplot.GnuplotPlotter
 import jfreegraph.JFGraphPlotter
 
-import reflect.runtime.universe._
-
 import spray.json._
 import DefaultJsonProtocol._
 
@@ -28,19 +26,14 @@ import java.io._
 
 object GAsolver {
 
-
-    implicit class ColonTypeExtender [T : TypeTag] (x : T) {
-        def colonType = typeOf[T].toString
-    }
-
     def main(args: Array[String]): Unit = {
 
         val problems = {
-            val mutationRates = List.fill(100)(Random.nextDouble*0.9 + 0.05)
-            val severity = List.fill(100)(Random.nextDouble*0.9 + 0.05)
-            val cross = List.fill(100)(Random.nextDouble*0.9 + 0.05)
-            val contestants = List.fill(100)( (Random.nextInt(95) + 5) )
-            val epsilon = List.fill(100)(Random.nextDouble*0.9 + 0.05)
+            val mutationRates = List.fill(200)(Random.nextDouble*0.9 + 0.05)
+            val severity = List.fill(200)(Random.nextDouble*0.9 + 0.05)
+            val cross = List.fill(200)(Random.nextDouble*0.9 + 0.05)
+            val contestants = List.fill(200)( (Random.nextInt(95) + 5) )
+            val epsilon = List.fill(200)(Random.nextDouble*0.9 + 0.05)
 
             def makeProblem(i: Int): String = { """
             
@@ -182,46 +175,3 @@ object Suprise {
             runner
     }
 }
-
-object ParamRun {
-
-    // import ParamSearch._
-
-    // type Pheno = Phenotype[ParamGenome]
-    // type Phenos = IndexedSeq[Pheno]
-
-    // def paramRunner(
-    //     adults: Int,
-    //     crossRate: Double,
-    //     mutationRate: Double,
-    //     mutationSeverity: Double): Runner[ParamGenome] = {
-
-    //         def evaluate(genome: ParamGenome) = 
-    //             ParamSearch.evaluate(genome)
-
-    //         def grow(genome: ParamGenome): Pheno = {
-    //             val v = evaluate(genome)
-    //             Phenotype[ParamGenome](genome, v, v, 0)
-    //         }
-
-    //         def reproduce(adults: Phenos): Vector[ParamGenome] =
-    //              sexualReproduction(mutationRate)(adults).toVector
-
-    //         val evolutionStrategy = AdultSelection.full[ParamGenome](
-    //             adults,
-    //             ParentSelection.tournamentStrat(_, 0.2, 9),
-    //             reproduce,
-    //             genomes => genomes.map(grow(_))
-    //         )
-
-    //         val runner = Runner[ParamGenome](
-    //             ParamGenome.initPool(adults, 3, crossRate, mutationSeverity).map(grow(_)),
-    //             p => ( (p.fittest.trueFitness == 1.0) || (p.generation > 40)),
-    //             evolutionStrategy
-    //         )
-    //         
-    //         runner
-    // }
-}
-
-
