@@ -54,7 +54,7 @@ object GAsolver {
             """.format(cross(i), mutationRates(i), severity(i), contestants(i), epsilon(i))
             }
 
-            List.tabulate(100)(n => makeProblem(n))
+            List.tabulate(200)(n => makeProblem(n))
         }
 
         val jasons = problems.map(_.parseJson.convertTo[Map[String, JsValue]])
