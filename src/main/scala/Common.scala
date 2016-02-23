@@ -214,7 +214,6 @@ object AdultSelection {
     ): Population[A] => Population[A] =
         pop => {
             val parents = parentSel( µ )(pop.adults)
-
             val children = grow(reproductionScheme(parents))
             pop.copy(adults = children)
         }

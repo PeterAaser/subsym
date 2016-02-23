@@ -34,9 +34,9 @@ object Data {
     case class Runner[A <: Genome[A]](
         val initPop: IndexedSeq[Phenotype[A]],
         val done: Population[A] => Boolean,
-        val evolve: Population[A] => Population[A],
-        val logger: String => Unit,
-        val writer: java.io.PrintWriter
+        val evolve: Population[A] => Population[A]
+        // val logger: String => Unit,
+        // val writer: java.io.PrintWriter
     ){
         
         def solve: (Population[A], List[(Double, Double)]) =
@@ -49,14 +49,13 @@ object Data {
             val avg = nextPop.averageFitness
 
             if(finished){
-                // logger(nextPop.verbose)
-                writer.close()
+                println("YOU'RE WINNER")
+                println(nextPop)
                 (nextPop.copy(generation = nextPop.generation + 1), (avg, best) :: log)
             }
             else{
                 println("generation %d".format(nextPop.generation))
                 println(nextPop)
-                // logger(nextPop.toString)
                 run(nextPop.copy(generation = nextPop.generation + 1), (avg, best) :: log)
             }
         }
