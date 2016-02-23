@@ -28,38 +28,6 @@ object GAsolver {
 
     def main(args: Array[String]): Unit = {
 
-        val problems = {
-            val mutationRates = List.fill(200)(Random.nextDouble*0.9 + 0.05)
-            val severity = List.fill(200)(Random.nextDouble*0.9 + 0.05)
-            val cross = List.fill(200)(Random.nextDouble*0.9 + 0.05)
-            val contestants = List.fill(200)( (Random.nextInt(95) + 5) )
-            val epsilon = List.fill(200)(Random.nextDouble*0.9 + 0.05)
-
-            def makeProblem(i: Int): String = { """
-            
-                {
-                    "problem": "symbol",
-                    "distance": "global",
-                    "symbols": 26,
-                    "length": 53,
-                    "adults": 2000,
-                    "crossRate": %1.2f,
-                    "mutationRate": %1.2f,
-                    "mutationSeverity": %1.2f,  
-                    "generations": 800,
-                    "contestants": %d,
-                    "epsilon": %1.2f
-                }
-
-            """.format(cross(i), mutationRates(i), severity(i), contestants(i), epsilon(i))
-            }
-
-            List.tabulate(200)(n => makeProblem(n))
-        }
-
-        val jasons = problems.map(_.parseJson.convertTo[Map[String, JsValue]])
-
-        jasons.foreach(p => parseSymbol(p) match { case f: Runner[SymbolGenome] => f.solve })
 
         def parseProblem(p: String) = {
             val problemString = Source.fromFile("presets/" + p + ".json").getLines.mkString 
@@ -89,7 +57,7 @@ object GAsolver {
             val epsilon = ((p get "epsilon") match { case Some(JsNumber(v)) => v })
             
 
-            val logfile = "symbol_cross_%1.2f_mrate_%1.2f_msev_%1.2f.txt".format(crossRate, mutationRate, mutationSeverity)
+            val logfile = "symbol_cross_%1.2f_mrate_%1.2f_msev_%1.2f_cont_%d_eps_%1.2f.txt".format(crossRate, mutationRate, mutationSeverity, contestants.toInt, epsilon)
             val writer = new PrintWriter(new File(logfile))
             val logger = { 
                 pop: String => {
@@ -114,12 +82,10 @@ object GAsolver {
                 writer)
         }
 
-        // val runner = parseProblem("problem") match {
-        //     case f: Runner[SymbolGenome] => f.solve
-        //     case f: Runner[SingleBitGenome] => f.solve
-        // }
-        
-        
+        val runner = parseProblem("problem") match {
+            case f: Runner[SymbolGenome] => f.solve
+            case f: Runner[SingleBitGenome] => f.solve
+        }
     }
 }
 
@@ -145,6 +111,8 @@ object Suprise {
         logger: String => Unit,
         writer: java.io.PrintWriter): Runner[SymbolGenome] = {
 
+            val children = 4000
+
             def evaluate(genome: SymbolGenome) = 
                 Suprising.evaluator(distance)(genome)
 
@@ -164,10 +132,22 @@ object Suprise {
                 }
             )
 
+            val evolutionStrategy2 = AdultSelection.mixin[SymbolGenome](
+                adults,
+                children,
+                ParentSelection.tournamentStrat(_, epsilon, contestants),
+                reproduce,
+                a => Selection.proportionalMixin(_, _, a),
+                genomes => {
+                    val a = genomes.par.map(grow(_))
+                    a.toVector
+                }
+            )
+
             val runner = Runner[SymbolGenome](
                 SymbolGenome.initPool(adults, length, symbols, crossRate, mutationSeverity).map(grow(_)),
                 p => ( (p.fittest.trueFitness == 1.0) || (p.generation > (generations - 1))),
-                evolutionStrategy,
+                evolutionStrategy2,
                 logger,
                 writer
             )
@@ -175,3 +155,35 @@ object Suprise {
             runner
     }
 }
+        // val problems = {
+        //     val mutationRates = List.fill(200)(Random.nextDouble*0.9 + 0.05)
+        //     val severity = List.fill(200)(Random.nextDouble*0.9 + 0.05)
+        //     val cross = List.fill(200)(Random.nextDouble*0.9 + 0.05)
+        //     val contestants = List.fill(200)( (Random.nextInt(95) + 5) )
+        //     val epsilon = List.fill(200)(Random.nextDouble*0.9 + 0.05)
+
+        //     def makeProblem(i: Int): String = { """
+        //     
+        //         {
+        //             "problem": "symbol",
+        //             "distance": "global",
+        //             "symbols": 26,
+        //             "length": 53,
+        //             "adults": 2000,
+        //             "crossRate": %1.2f,
+        //             "mutationRate": %1.2f,
+        //             "mutationSeverity": %1.2f,  
+        //             "generations": 800,
+        //             "contestants": %d,
+        //             "epsilon": %1.2f
+        //         }
+
+        //     """.format(cross(i), mutationRates(i), severity(i), contestants(i), epsilon(i))
+        //     }
+
+        //     List.tabulate(200)(n => makeProblem(n))
+        // }
+
+        // val jasons = problems.map(_.parseJson.convertTo[Map[String, JsValue]])
+
+        // jasons.foreach(p => parseSymbol(p) match { case f: Runner[SymbolGenome] => f.solve })

@@ -49,13 +49,14 @@ object Data {
             val avg = nextPop.averageFitness
 
             if(finished){
-                logger(nextPop.verbose)
+                // logger(nextPop.verbose)
                 writer.close()
                 (nextPop.copy(generation = nextPop.generation + 1), (avg, best) :: log)
             }
             else{
                 println("generation %d".format(nextPop.generation))
-                logger(nextPop.toString)
+                println(nextPop)
+                // logger(nextPop.toString)
                 run(nextPop.copy(generation = nextPop.generation + 1), (avg, best) :: log)
             }
         }
@@ -89,7 +90,8 @@ object Data {
             "\nAvg fitness: " +
             ((0.0 /: adults.map(_.trueFitness))(_+_))/adults.length +
             "\nBest fit \n: " +
-            fittest
+            fittest +
+            "\n individuals: %d\n".format(adults.length)
         }
     }
 }

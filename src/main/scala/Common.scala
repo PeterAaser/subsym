@@ -69,6 +69,24 @@ object Scaling {
 
 }
 
+object Selection {
+
+    def proportional[A <: Genome[A]](
+        candidates: IndexedSeq[Phenotype[A]],
+        spots: Int): IndexedSeq[Phenotype[A]] =
+
+            candidates.sortBy(_.relativeFitness) takeRight spots
+
+
+    def proportionalMixin[A <: Genome[A]](
+        children: IndexedSeq[Phenotype[A]],
+        adults: IndexedSeq[Phenotype[A]],
+        spots: Int): IndexedSeq[Phenotype[A]] =
+
+            (adults ++ children).sortBy(_.relativeFitness) takeRight spots
+
+}
+
 object ParentSelection {
 
     // Roulette selection expects a roulette scaled population
@@ -184,6 +202,9 @@ object Reproduction {
 
 
 object AdultSelection {
+
+    // µ child pool size
+    // λ adult pool size
     
     def full[A <: Genome[A]](
         µ: Int,
@@ -225,8 +246,12 @@ object AdultSelection {
         grow: IndexedSeq[A] => IndexedSeq[Phenotype[A]]
     ): Population[A] => Population[A] =
         pop => {
-            val parents = parentSel( µ )(pop.adults)
+            println("Got %d parents".format(λ))
+            val parents = parentSel( λ )(pop.adults)
+
             val children = grow(reproductionScheme(parents))
+
+            println("there were %d survivors for the next generation".format( µ ))
             val survivors = adultSel( λ )(children, pop.adults)
             pop.copy(adults = survivors)
         }
