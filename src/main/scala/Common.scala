@@ -159,6 +159,12 @@ object ParentSelection {
 
     def tournamentStrat[A <: Genome[A]](winners: Int, epsilon: Double, contestants: Int): (IndexedSeq[Phenotype[A]] => IndexedSeq[Phenotype[A]]) =
         adults => tournamentSelection(adults, winners, epsilon, contestants)
+
+    def proportional[A <: Genome[A]](winners: Int): IndexedSeq[Phenotype[A]] => IndexedSeq[Phenotype[A]] =
+        adults => 
+            ParentSelection.rouletteSelection(rouletteScaler(adults))(winners)
+        
+
 }
 
 

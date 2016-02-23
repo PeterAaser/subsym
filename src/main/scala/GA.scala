@@ -23,8 +23,18 @@ object GAsolver {
 
     def main(args: Array[String]): Unit = {
 
-        val p = JParse.parseProblem("lolz")
-        p.solve
+        val p = JParse.parseProblem("om")
+        val logs = p.solve
+
+        val (avg, best) = logs._2.reverse.unzip
+
+        val series = new MemXYSeries((0 until avg.length).map(_.toDouble), avg, "average")
+        val data = new XYData(series)
+        data += new MemXYSeries((0 until best.length).map(_.toDouble), best, "best")
+        val chart = new XYChart("One Max", data)
+        chart.showLegend = true
+        val plotter = new JFGraphPlotter(chart)
+        plotter.gui()
     }
 }
 

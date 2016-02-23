@@ -19,6 +19,14 @@ import reflect.runtime.universe._
 
 object OneMax {
 
+    def randomEvaluator(l: Int): (SingleBitGenome => Double) = {
+        val ideal = Vector.fill(l)(Random.nextInt(2))
+        genome => {
+            val hits = (genome.gene.bits zip ideal)
+            ???
+        }
+    }
+
     val evaluate: (SingleBitGenome => Double) =
         genome => {
             val sum = (0 /: genome.gene.bits)(_+_)

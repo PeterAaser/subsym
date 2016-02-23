@@ -91,6 +91,7 @@ object JParse {
         val reproductionStrat: (Int => (Phenos => Phenos)) = (p.reproductionStrat, p.epsilon, p.contestants) match {
             case ( "tournament", Some(epsilon), Some(contestants) ) => ParentSelection.tournamentStrat(_, epsilon, contestants)
             case ( "roulette", _, _) => rouletteStrat(_) 
+            case ( "proportional", _, _) => proportional(_) 
             case _ => rouletteStrat(_)
         }
 
@@ -140,6 +141,7 @@ object JParse {
         val reproductionStrat: (Int => (Phenos => Phenos)) = (p.reproductionStrat, p.epsilon, p.contestants) match {
             case ( "tournament", Some(epsilon), Some(contestants) ) => ParentSelection.tournamentStrat(_, epsilon, contestants)
             case ( "roulette", _, _) => rouletteStrat(_) 
+            case ( "proportional", _, _) => proportional(_) 
             case _ => rouletteStrat(_)
         }
 
