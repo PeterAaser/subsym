@@ -86,7 +86,7 @@ object Selection {
             candidates.sortBy(_.relativeFitness) takeRight spots
 
 
-    def proportionalMixin[A <: Genome[A]](spots: Int, children: IndexedSeq[Phenotype[A]], adults: IndexedSeq[Phenotype[A]]): IndexedSeq[Phenotype[A]] =
+    def proportionalMixin[A <: Genome[A]](gen: Int, spots: Int, children: IndexedSeq[Phenotype[A]], adults: IndexedSeq[Phenotype[A]]): IndexedSeq[Phenotype[A]] =
             (adults ++ children).sortBy(_.relativeFitness) takeRight spots
 
 }
@@ -150,7 +150,7 @@ object ParentSelection {
         collect(items toVector, sampleSize, Nil)
     }
 
-    def sigmaSelect[A <: Genome[A]](winners: Int, adults: IndexedSeq[Phenotype[A]]): IndexedSeq[Phenotype[A]] = {
+    def sigmaSelect[A <: Genome[A]](gen: Int, winners: Int, adults: IndexedSeq[Phenotype[A]]): IndexedSeq[Phenotype[A]] = {
             val Snormalizer = normalizer[A](_)
             val Ssigma = sigma[A](_)
             val sScaled = scale(adults, Ssigma)
@@ -160,14 +160,12 @@ object ParentSelection {
             rouletted
         }
 
-    def tournamentStrat[A <: Genome[A]](winners: Int, adults: IndexedSeq[Phenotype[A]], epsilon: Double, contestants: Int): IndexedSeq[Phenotype[A]] =
+    def tournamentStrat[A <: Genome[A]](gen: Int, winners: Int, adults: IndexedSeq[Phenotype[A]], epsilon: Double, contestants: Int): IndexedSeq[Phenotype[A]] =
         tournamentSelection(adults, winners, epsilon, contestants)
 
-    def rouletteStrat[A <: Genome[A]](winners: Int, adults: IndexedSeq[Phenotype[A]]): IndexedSeq[Phenotype[A]] = 
+    def rouletteStrat[A <: Genome[A]](gen: Int, winners: Int, adults: IndexedSeq[Phenotype[A]]): IndexedSeq[Phenotype[A]] = 
         ParentSelection.rouletteSelection(rouletteScaler(adults))(winners)
         
-
-    // def rankSelection[A <: Genome[A]](winners
 
 }
 
@@ -218,12 +216,12 @@ object AdultSelection {
     
     def full[A <: Genome[A]](
         µ: Int,
-        parentSel: (Int, IndexedSeq[Phenotype[A]]) => IndexedSeq[Phenotype[A]],
+        parentSel: (Int, Int, IndexedSeq[Phenotype[A]]) => IndexedSeq[Phenotype[A]],
         reproductionScheme: IndexedSeq[Phenotype[A]] => IndexedSeq[A],
         grow: IndexedSeq[A] => IndexedSeq[Phenotype[A]]
     ): Population[A] => Population[A] =
         pop => {
-            val parents = parentSel( µ, pop.adults)
+            val parents = parentSel( pop.generation, µ, pop.adults)
             val children = grow(reproductionScheme(parents))
             pop.copy(adults = children)
         }
@@ -233,15 +231,15 @@ object AdultSelection {
     def overProduction[A <: Genome[A]](
         µ: Int,
         λ: Int,
-        parentSel: (Int, IndexedSeq[Phenotype[A]]) => IndexedSeq[Phenotype[A]],
+        parentSel: (Int, Int, IndexedSeq[Phenotype[A]]) => IndexedSeq[Phenotype[A]],
         reproductionScheme: IndexedSeq[Phenotype[A]] => IndexedSeq[A],
-        adultSel: (Int, IndexedSeq[Phenotype[A]]) => IndexedSeq[Phenotype[A]],
+        adultSel: (Int, Int, IndexedSeq[Phenotype[A]]) => IndexedSeq[Phenotype[A]],
         grow: IndexedSeq[A] => IndexedSeq[Phenotype[A]]
     ): Population[A] => Population[A] =
         pop => {
-            val parents = parentSel( λ, pop.adults)
+            val parents = parentSel( pop.generation, λ, pop.adults)
             val children = grow(reproductionScheme(parents))
-            val survivors = adultSel( µ, children)
+            val survivors = adultSel( pop.generation, µ, children)
             pop.copy(adults = survivors)
         }
 
@@ -249,19 +247,19 @@ object AdultSelection {
     def mixin[A <: Genome[A]](
         µ: Int,
         λ: Int,
-        parentSel: (Int, IndexedSeq[Phenotype[A]]) => IndexedSeq[Phenotype[A]],
+        parentSel: (Int, Int, IndexedSeq[Phenotype[A]]) => IndexedSeq[Phenotype[A]],
         reproductionScheme: IndexedSeq[Phenotype[A]] => IndexedSeq[A],
-        adultSel: (Int, IndexedSeq[Phenotype[A]], IndexedSeq[Phenotype[A]]) => IndexedSeq[Phenotype[A]],
+        adultSel: (Int, Int, IndexedSeq[Phenotype[A]], IndexedSeq[Phenotype[A]]) => IndexedSeq[Phenotype[A]],
         grow: IndexedSeq[A] => IndexedSeq[Phenotype[A]]
     ): Population[A] => Population[A] =
         pop => {
             println("Got %d parents".format(λ))
-            val parents = parentSel( λ, pop.adults)
+            val parents = parentSel( pop.generation, λ, pop.adults)
 
             val children = grow(reproductionScheme(parents))
 
             println("there were %d survivors for the next generation".format( µ ))
-            val survivors = adultSel( λ, children, pop.adults)
+            val survivors = adultSel( pop.generation, λ, children, pop.adults)
             pop.copy(adults = survivors)
         }
 }

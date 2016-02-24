@@ -90,8 +90,8 @@ object JParse {
         def reproduce(adults: Phenos): Vector[SymbolGenome] =
             sexualReproduction(p.mutationRate)(adults).toVector
 
-        val reproductionStrat: (Int, Phenos) => Phenos = (p.reproductionStrat, p.epsilon, p.contestants) match {
-            case ( "tournament", Some(epsilon), Some(contestants) ) => ParentSelection.tournamentStrat(_, _, epsilon, contestants)
+        val reproductionStrat: (Int, Int, Phenos) => Phenos = (p.reproductionStrat, p.epsilon, p.contestants) match {
+            case ( "tournament", Some(epsilon), Some(contestants) ) => ParentSelection.tournamentStrat(_, _, _, epsilon, contestants)
             case ( "roulette", _, _) => rouletteStrat
             case ( "sigma", _, _) => sigmaSelect
             case _ => rouletteStrat
@@ -104,7 +104,7 @@ object JParse {
                 childPool,
                 reproductionStrat,
                 reproduce,
-                Selection.proportionalMixin(_: Int, _, _),
+                Selection.proportionalMixin,
                 genomes => genomes.par.map(grow(_)).toVector)
 
             case ("full", _) => AdultSelection.full[SymbolGenome](
@@ -141,8 +141,8 @@ object JParse {
         def reproduce(adults: Phenos): Vector[SingleBitGenome] =
             sexualReproduction(p.mutationRate)(adults).toVector
 
-        val reproductionStrat: (Int, Phenos) => Phenos = (p.reproductionStrat, p.epsilon, p.contestants) match {
-            case ( "tournament", Some(epsilon), Some(contestants) ) => ParentSelection.tournamentStrat(_, _, epsilon, contestants)
+        val reproductionStrat: (Int, Int, Phenos) => Phenos = (p.reproductionStrat, p.epsilon, p.contestants) match {
+            case ( "tournament", Some(epsilon), Some(contestants) ) => ParentSelection.tournamentStrat(_, _, _, epsilon, contestants)
             case ( "roulette", _, _) => rouletteStrat
             case ( "sigma", _, _) => sigmaSelect
             case _ => rouletteStrat
@@ -165,7 +165,6 @@ object JParse {
                 genomes => genomes.par.map(grow(_)).toVector)
 
             case ("over", _) => ???
-            // case _ => 
         }
 
         Runner[SingleBitGenome](
