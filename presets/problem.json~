@@ -1,0 +1,11 @@
+{
+    "problem": "symbol",
+    "distance": "global",
+    "symbols": 26,
+    "length": 53,
+    "adults": 2000,
+    "crossRate": 0.5, 
+    "mutationRate": 0.8,
+    "mutationSeverity": 0.2, 
+    "generations": 800
+}

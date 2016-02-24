@@ -14,13 +14,15 @@ libraryDependencies ++= Seq(
     "org.scalafx" %% "scalafx" % "8.0.60-R9",
     "org.sameersingh.scalaplot" % "scalaplot" % "0.0.4",
     "io.spray" %% "spray-json" % "1.3.2",
-    "org.scalafx" %% "scalafx" % "8.0.60-R9"
+    "org.scalafx" %% "scalafx" % "8.0.60-R9",
+    "com.github.scala-blitz" %% "scala-blitz" % "1.1"
 )
 
 scalacOptions := Seq("-feature", "-deprecation")
 
-// fork in run := true
-// cancelable in Global := true
+fork in run := true
+cancelable in Global := true
+connectInput in run := true
 
 import com.github.retronym.SbtOneJar._
 

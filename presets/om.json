@@ -1,0 +1,17 @@
+{
+    "problem": "LOLZ",
+    "cutoff": 21,
+    "distance": "global",
+    "symbols": 37,
+    "length": 40,
+    "adultPool": 750,
+    "childPool": 50,
+    "crossRate": 0.33,
+    "mutationRate": 0.00,
+    "mutationSeverity": 0.00,
+    "contestants": 5,
+    "epsilon": 0.3, 
+    "generations": 100,
+    "reproductionStrat": "tournament",
+    "populationStrat": "full"
+}

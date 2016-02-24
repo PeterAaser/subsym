@@ -1,11 +1,16 @@
 {
     "problem": "symbol",
-    "distance": "global",
-    "symbols": 26,
-    "length": 53,
-    "adults": 2000,
-    "crossRate": 0.5, 
-    "mutationRate": 0.8,
-    "mutationSeverity": 0.2, 
-    "generations": 800
+    "distance": 1,
+    "symbols": 20,
+    "length": 380,
+    "adultPool": 1000,
+    "childPool": 3600,
+    "crossRate": 0.008,
+    "mutationRate": 0.8, 
+    "mutationSeverity": 0.004,
+    "contestants": 36,
+    "epsilon": 0.5, 
+    "generations": 3000,
+    "reproductionStrat": "roulette",
+    "populationStrat": "mixin"
 }
