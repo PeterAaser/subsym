@@ -58,7 +58,7 @@ object LOLZ {
 object Suprising {
 
     import scala.collection.mutable.HashSet
-    import scala.collection.optimizer._
+    // import scala.collection.optimizer._
 
     case class SubSeq(s1: Int, s2: Int, d: Int)
 
@@ -68,7 +68,7 @@ object Suprising {
         d*( (length - 1) - d) + (d*(d + 1))/2
     }
 
-    def collect(h: SymbolGene, t: IndexedSeq[SymbolGene], d: Int, found: HashSet[SubSeq]) = optimize  {
+    def collect(h: SymbolGene, t: IndexedSeq[SymbolGene], d: Int, found: HashSet[SubSeq]) = {
         val successors = (t take d).zipWithIndex
         successors.toList.foreach( { case (s, i) => found += SubSeq(h.symbol, s.symbol, i) } )
     }

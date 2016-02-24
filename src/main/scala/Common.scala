@@ -27,6 +27,16 @@ object Scaling {
             candidates.map(c => c.copy(relativeFitness=scalingFun(c.relativeFitness)))
         }
 
+
+    def boltzmannScaler[A <: Genome[A]](candidates: IndexedSeq[Phenotype[A]], temperature: Int): (Double => Double) = {
+        
+        val fitnessTotal = math.exp((0.0 /: candidates.map(_.relativeFitness))(_+_)/temperature.toDouble)
+        (relativeFitness => math.exp(relativeFitness/temperature.toDouble))
+        
+    }
+
+
+
     def sigma[A <: Genome[A]](candidates: IndexedSeq[Phenotype[A]]): (Double => Double) = {
         val mean = (0.0 /: candidates.map(_.relativeFitness))(_+_)/(candidates.length.toDouble)
         if(mean == 0.0)
@@ -75,6 +85,7 @@ object Scaling {
         stackingSum(candidates, 0.0)
     }
 
+
 }
 
 object Selection {
@@ -97,19 +108,35 @@ object ParentSelection {
         candidates: IndexedSeq[Phenotype[A]]
     ): Int => IndexedSeq[Phenotype[A]] = winners => {
 
+        val selected = scala.collection.mutable.ListBuffer[Phenotype[A]]()
+        val rolls = Vector.fill(candidates.size)(Random.nextDouble)
         val sorted = candidates.sortBy(_.trueFitness)
 
-        def search(low: Int, high: Int, target: Double): Phenotype[A] = {
-            if (low == high - 1){
-                sorted(high) 
-            }
-            else (low + high)/2 match {
-                case mid if sorted(mid).relativeFitness > target => search(low, mid, target)
-                case mid if sorted(mid).relativeFitness < target => search(mid, high, target)
-                case _ => sorted(low)
+        def fill(roll: Int, cand: Int): Unit = {
+            if(roll < rolls.length && cand < candidates.length){
+                if(candidates(roll).trueFitness < rolls(cand)){
+                    selected += candidates(roll)
+                    fill(roll + 1, cand)
+                }
+                else{
+                    fill(roll, cand + 1)
+                }
             }
         }
-        Vector.fill(winners)(search(0, candidates.size, Random.nextDouble))
+        fill(0, 0)
+        selected.toVector
+
+        // def search(low: Int, high: Int, target: Double): Phenotype[A] = {
+        //     if (low == high - 1){
+        //         candidates(high)
+        //     }
+        //     else (low + high)/2 match {
+        //         case mid if candidates(mid).relativeFitness > target => search(low, mid, target)
+        //         case mid if candidates(mid).relativeFitness < target => search(mid, high, target)
+        //         case _ => candidates(low)
+        //     }
+        // }
+        // Vector.fill(winners)(search(0, candidates.size, Random.nextDouble))
     }
 
 
@@ -151,18 +178,39 @@ object ParentSelection {
     }
 
     def sigmaSelect[A <: Genome[A]](gen: Int, winners: Int, adults: IndexedSeq[Phenotype[A]]): IndexedSeq[Phenotype[A]] = {
-            val sigmaScaled = scale(adults, sigma[A])
+            val sigmaScaled = scale(adults, sigma[A]).sortBy(_.trueFitness)
             ParentSelection.rouletteSelection(rouletteScaler(sigmaScaled))(winners)
         }
+
 
     def tournamentStrat[A <: Genome[A]](gen: Int, winners: Int, adults: IndexedSeq[Phenotype[A]], epsilon: Double, contestants: Int): IndexedSeq[Phenotype[A]] =
         tournamentSelection(adults, winners, epsilon, contestants)
 
+
     def rouletteStrat[A <: Genome[A]](gen: Int, winners: Int, adults: IndexedSeq[Phenotype[A]]): IndexedSeq[Phenotype[A]] = 
         ParentSelection.rouletteSelection(rouletteScaler(adults))(winners)
         
-    def rankStrat[A <: Genome[A]](gen: Int, winners: Int, adults: IndexedSeq[Phenotype[A]]): IndexedSeq[Phenotype[A]] =
-        ParentSelection.rouletteSelection(rouletteScaler(adults))(winners)
+
+    def rankStrat[A <: Genome[A]](gen: Int, winners: Int, adults: IndexedSeq[Phenotype[A]]): IndexedSeq[Phenotype[A]] = {
+        val scaled = rankScale(gen, adults)
+        rouletteSelection(rouletteScaler(scaled))(winners)
+    }
+
+
+    def boltzmannStrat[A <: Genome[A]](gen: Int, winners: Int, adults: IndexedSeq[Phenotype[A]]): IndexedSeq[Phenotype[A]] = {
+        val scaler = (pop: IndexedSeq[Phenotype[A]]) => boltzmannScaler(pop, 160 - gen)
+        val scaled = scale(adults, scaler)
+        rouletteSelection(rouletteScaler(scaled))(winners)
+    }
+
+    def mysteryStrat[A <: Genome[A]](gen: Int, winners: Int, adults: IndexedSeq[Phenotype[A]], epsilon: Double, contestants: Int): IndexedSeq[Phenotype[A]] = {
+        gen match {
+            case x if x < 40 => rankStrat(gen, winners, adults)
+            case x if x < 80 => rouletteStrat(gen, winners, adults)
+            case x if x < 110 => tournamentSelection(adults, winners, epsilon, contestants)
+            case _ => boltzmannStrat(gen, winners, adults)
+        }
+    }
 }
 
 

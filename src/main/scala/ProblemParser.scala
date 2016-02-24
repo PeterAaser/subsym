@@ -95,6 +95,8 @@ object JParse {
             case ( "tournament", Some(epsilon), Some(contestants) ) => tournamentStrat(_, _, _, epsilon, contestants)
             case ( "roulette", _, _) => rouletteStrat
             case ( "sigma", _, _) => sigmaSelect
+            case ( "rank", _, _) => rankStrat
+            case ( "mystery", Some(epsilon), Some(contestants) ) => mysteryStrat(_, _, _, epsilon, contestants)
             case _ => rouletteStrat
         }
 
@@ -156,7 +158,7 @@ object JParse {
                 childPool,
                 reproductionStrat,
                 reproduce,
-                Selection.proportionalMixin,
+                (a, b, c, d) => sigmaSelect(a, b ++ c, d)
                 genomes => genomes.par.map(grow(_)).toVector)
 
             case ("full", _) => full[SingleBitGenome](
