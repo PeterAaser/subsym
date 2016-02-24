@@ -12,6 +12,7 @@ import Representations._
 import Scaling._
 import Reproduction._
 import ParentSelection._
+import AdultSelection._
 
 import Data._
 
@@ -51,7 +52,7 @@ object JParse {
         cutoff: Option[Int]
     )
 
-    def parseProblem(p: String): Runner[_] = {
+    def parseProblem[A <: Genome[A]](p: String): Runner[_] = {
         val problemString = Source.fromFile("presets/" + p + ".json").getLines.mkString 
         val problem = problemString.parseJson.convertTo[CommonParams]
 
@@ -91,7 +92,7 @@ object JParse {
             sexualReproduction(p.mutationRate)(adults).toVector
 
         val reproductionStrat: (Int, Int, Phenos) => Phenos = (p.reproductionStrat, p.epsilon, p.contestants) match {
-            case ( "tournament", Some(epsilon), Some(contestants) ) => ParentSelection.tournamentStrat(_, _, _, epsilon, contestants)
+            case ( "tournament", Some(epsilon), Some(contestants) ) => tournamentStrat(_, _, _, epsilon, contestants)
             case ( "roulette", _, _) => rouletteStrat
             case ( "sigma", _, _) => sigmaSelect
             case _ => rouletteStrat
@@ -99,7 +100,7 @@ object JParse {
 
         def populationStrat = (p.populationStrat, p.childPool) match {
             
-            case ("mixin", Some(childPool)) => AdultSelection.mixin[SymbolGenome](
+            case ("mixin", Some(childPool)) => mixin[SymbolGenome](
                 p.adultPool,
                 childPool,
                 reproductionStrat,
@@ -107,7 +108,7 @@ object JParse {
                 Selection.proportionalMixin,
                 genomes => genomes.par.map(grow(_)).toVector)
 
-            case ("full", _) => AdultSelection.full[SymbolGenome](
+            case ("full", _) => full[SymbolGenome](
                 p.adultPool,
                 reproductionStrat,
                 reproduce,
@@ -142,7 +143,7 @@ object JParse {
             sexualReproduction(p.mutationRate)(adults).toVector
 
         val reproductionStrat: (Int, Int, Phenos) => Phenos = (p.reproductionStrat, p.epsilon, p.contestants) match {
-            case ( "tournament", Some(epsilon), Some(contestants) ) => ParentSelection.tournamentStrat(_, _, _, epsilon, contestants)
+            case ( "tournament", Some(epsilon), Some(contestants) ) => tournamentStrat(_, _, _, epsilon, contestants)
             case ( "roulette", _, _) => rouletteStrat
             case ( "sigma", _, _) => sigmaSelect
             case _ => rouletteStrat
@@ -150,7 +151,7 @@ object JParse {
 
         def populationStrat = (p.populationStrat, p.childPool) match {
             
-            case ("mixin", Some(childPool)) => AdultSelection.mixin[SingleBitGenome](
+            case ("mixin", Some(childPool)) => mixin[SingleBitGenome](
                 p.adultPool,
                 childPool,
                 reproductionStrat,
@@ -158,7 +159,7 @@ object JParse {
                 Selection.proportionalMixin,
                 genomes => genomes.par.map(grow(_)).toVector)
 
-            case ("full", _) => AdultSelection.full[SingleBitGenome](
+            case ("full", _) => full[SingleBitGenome](
                 p.adultPool,
                 reproductionStrat,
                 reproduce,

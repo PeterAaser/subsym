@@ -85,7 +85,6 @@ object Selection {
 
             candidates.sortBy(_.relativeFitness) takeRight spots
 
-
     def proportionalMixin[A <: Genome[A]](gen: Int, spots: Int, children: IndexedSeq[Phenotype[A]], adults: IndexedSeq[Phenotype[A]]): IndexedSeq[Phenotype[A]] =
             (adults ++ children).sortBy(_.relativeFitness) takeRight spots
 
@@ -96,20 +95,21 @@ object ParentSelection {
     // Roulette selection expects a roulette scaled population
     def rouletteSelection[A <: Genome[A]](
         candidates: IndexedSeq[Phenotype[A]]
-    ): Int => IndexedSeq[Phenotype[A]] = spins => {
+    ): Int => IndexedSeq[Phenotype[A]] = winners => {
 
-        // hastily clobbered together
+        val sorted = candidates.sortBy(_.trueFitness)
+
         def search(low: Int, high: Int, target: Double): Phenotype[A] = {
             if (low == high - 1){
-                candidates(high) 
+                sorted(high) 
             }
             else (low + high)/2 match {
-                case mid if candidates(mid).relativeFitness > target => search(low, mid, target)
-                case mid if candidates(mid).relativeFitness < target => search(mid, high, target)
-                case _ => candidates(low)
+                case mid if sorted(mid).relativeFitness > target => search(low, mid, target)
+                case mid if sorted(mid).relativeFitness < target => search(mid, high, target)
+                case _ => sorted(low)
             }
         }
-        Vector.fill(spins)(search(0, candidates.size, Random.nextDouble))
+        Vector.fill(winners)(search(0, candidates.size, Random.nextDouble))
     }
 
 
@@ -151,13 +151,8 @@ object ParentSelection {
     }
 
     def sigmaSelect[A <: Genome[A]](gen: Int, winners: Int, adults: IndexedSeq[Phenotype[A]]): IndexedSeq[Phenotype[A]] = {
-            val Snormalizer = normalizer[A](_)
-            val Ssigma = sigma[A](_)
-            val sScaled = scale(adults, Ssigma)
-            val nScaled = scale(sScaled, Snormalizer)
-            val rScaled = rouletteScaler(nScaled)
-            val rouletted = ParentSelection.rouletteSelection(rScaled)(winners)
-            rouletted
+            val sigmaScaled = scale(adults, sigma[A])
+            ParentSelection.rouletteSelection(rouletteScaler(sigmaScaled))(winners)
         }
 
     def tournamentStrat[A <: Genome[A]](gen: Int, winners: Int, adults: IndexedSeq[Phenotype[A]], epsilon: Double, contestants: Int): IndexedSeq[Phenotype[A]] =
@@ -166,7 +161,8 @@ object ParentSelection {
     def rouletteStrat[A <: Genome[A]](gen: Int, winners: Int, adults: IndexedSeq[Phenotype[A]]): IndexedSeq[Phenotype[A]] = 
         ParentSelection.rouletteSelection(rouletteScaler(adults))(winners)
         
-
+    def rankStrat[A <: Genome[A]](gen: Int, winners: Int, adults: IndexedSeq[Phenotype[A]]): IndexedSeq[Phenotype[A]] =
+        ParentSelection.rouletteSelection(rouletteScaler(adults))(winners)
 }
 
 
@@ -253,12 +249,8 @@ object AdultSelection {
         grow: IndexedSeq[A] => IndexedSeq[Phenotype[A]]
     ): Population[A] => Population[A] =
         pop => {
-            println("Got %d parents".format(λ))
             val parents = parentSel( pop.generation, λ, pop.adults)
-
             val children = grow(reproductionScheme(parents))
-
-            println("there were %d survivors for the next generation".format( µ ))
             val survivors = adultSel( pop.generation, λ, children, pop.adults)
             pop.copy(adults = survivors)
         }
