@@ -108,35 +108,38 @@ object ParentSelection {
         candidates: IndexedSeq[Phenotype[A]]
     ): Int => IndexedSeq[Phenotype[A]] = winners => {
 
-        val selected = scala.collection.mutable.ListBuffer[Phenotype[A]]()
-        val rolls = Vector.fill(candidates.size)(Random.nextDouble)
-        val sorted = candidates.sortBy(_.trueFitness)
+        // val selected = scala.collection.mutable.ListBuffer[Phenotype[A]]()
+        // val rolls = Vector.fill(winners)(Random.nextDouble).reverse
+        // val sorted = candidates.sortBy(_.trueFitness).reverse
 
-        def fill(roll: Int, cand: Int): Unit = {
-            if(roll < rolls.length && cand < candidates.length){
-                if(candidates(roll).trueFitness < rolls(cand)){
-                    selected += candidates(roll)
-                    fill(roll + 1, cand)
-                }
-                else{
-                    fill(roll, cand + 1)
-                }
-            }
-        }
-        fill(0, 0)
-        selected.toVector
+        // println(rolls)
 
-        // def search(low: Int, high: Int, target: Double): Phenotype[A] = {
-        //     if (low == high - 1){
-        //         candidates(high)
-        //     }
-        //     else (low + high)/2 match {
-        //         case mid if candidates(mid).relativeFitness > target => search(low, mid, target)
-        //         case mid if candidates(mid).relativeFitness < target => search(mid, high, target)
-        //         case _ => candidates(low)
+        // def fill(roll: Int, cand: Int): Unit = {
+        //     println("roll: " + roll + " cand: " + cand + "candroll: " + candidates(roll).trueFitness + "rollval: " + rolls(cand))
+        //     if(roll < rolls.length && cand < candidates.length){
+        //         if(candidates(cand).trueFitness < rolls(roll)){
+        //             selected += candidates(roll)
+        //             fill(roll + 1, cand)
+        //         }
+        //         else{
+        //             fill(roll, cand + 1)
+        //         }
         //     }
         // }
-        // Vector.fill(winners)(search(0, candidates.size, Random.nextDouble))
+        // fill(0, 0)
+        // selected.toVector
+
+        def search(low: Int, high: Int, target: Double): Phenotype[A] = {
+            if (low == high - 1){
+                candidates(high)
+            }
+            else (low + high)/2 match {
+                case mid if candidates(mid).relativeFitness > target => search(low, mid, target)
+                case mid if candidates(mid).relativeFitness < target => search(mid, high, target)
+                case _ => candidates(low)
+            }
+        }
+        Vector.fill(winners)(search(0, candidates.size, Random.nextDouble))
     }
 
 
@@ -178,6 +181,7 @@ object ParentSelection {
     }
 
     def sigmaSelect[A <: Genome[A]](gen: Int, winners: Int, adults: IndexedSeq[Phenotype[A]]): IndexedSeq[Phenotype[A]] = {
+            println("sigma has been asked to collect " + winners + " dudes")
             val sigmaScaled = scale(adults, sigma[A]).sortBy(_.trueFitness)
             ParentSelection.rouletteSelection(rouletteScaler(sigmaScaled))(winners)
         }
@@ -293,13 +297,25 @@ object AdultSelection {
         λ: Int,
         parentSel: (Int, Int, IndexedSeq[Phenotype[A]]) => IndexedSeq[Phenotype[A]],
         reproductionScheme: IndexedSeq[Phenotype[A]] => IndexedSeq[A],
-        adultSel: (Int, Int, IndexedSeq[Phenotype[A]], IndexedSeq[Phenotype[A]]) => IndexedSeq[Phenotype[A]],
+        adultSel: (Int, Int, IndexedSeq[Phenotype[A]]) => IndexedSeq[Phenotype[A]],
         grow: IndexedSeq[A] => IndexedSeq[Phenotype[A]]
     ): Population[A] => Population[A] =
         pop => {
+            println("Commencing fuckup with values:")
+
+            println(λ)
+            println(µ)
+
             val parents = parentSel( pop.generation, λ, pop.adults)
+            println("selected " + parents.length + " parents")
+
             val children = grow(reproductionScheme(parents))
-            val survivors = adultSel( pop.generation, λ, children, pop.adults)
+            println("grew " + children.length + " freaks")
+
+            val survivors = adultSel( pop.generation, µ, (children ++ pop.adults))
+            println("survivours:  " + survivors.length + " ayy")
+
+            println(survivors.length)
             pop.copy(adults = survivors)
         }
 }

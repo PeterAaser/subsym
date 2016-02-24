@@ -107,7 +107,7 @@ object JParse {
                 childPool,
                 reproductionStrat,
                 reproduce,
-                Selection.proportionalMixin,
+                sigmaSelect,
                 genomes => genomes.par.map(grow(_)).toVector)
 
             case ("full", _) => full[SymbolGenome](
@@ -158,7 +158,7 @@ object JParse {
                 childPool,
                 reproductionStrat,
                 reproduce,
-                (a, b, c, d) => sigmaSelect(a, b ++ c, d)
+                sigmaSelect,
                 genomes => genomes.par.map(grow(_)).toVector)
 
             case ("full", _) => full[SingleBitGenome](
