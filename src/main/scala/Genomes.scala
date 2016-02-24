@@ -109,7 +109,7 @@ object Representations {
             copy(genome=t1.toVector)
         }
 
-        override def toString: String = genome.map(_.symbol).mkString("[", "][", "]")
+        override def toString: String = genome.map(_.symbol).mkString("[", ", ", "]")
     }
     object SymbolGenome {
 

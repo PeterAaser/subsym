@@ -79,8 +79,10 @@ object JParse {
             case Right(_) => s.length 
         }
         
-        def evaluate(genome: SymbolGenome) =
+        def evaluate(genome: SymbolGenome) = {
             Suprising.evaluator(distance)(genome)
+
+        }
 
         def grow(genome: SymbolGenome): Pheno =
             Phenotype[SymbolGenome](genome, evaluate(genome), evaluate(genome), 0)
@@ -91,7 +93,7 @@ object JParse {
         val reproductionStrat: (Int => (Phenos => Phenos)) = (p.reproductionStrat, p.epsilon, p.contestants) match {
             case ( "tournament", Some(epsilon), Some(contestants) ) => ParentSelection.tournamentStrat(_, epsilon, contestants)
             case ( "roulette", _, _) => rouletteStrat(_) 
-            case ( "proportional", _, _) => proportional(_) 
+            case ( "sigma", _, _) => sigmaSelect(_) 
             case _ => rouletteStrat(_)
         }
 
@@ -128,6 +130,7 @@ object JParse {
         
         val evaluate: (SingleBitGenome => Double) = (p.problem, b.cutoff) match {
 
+            // case ("OneMax", _) => OneMax.randomEvaluator(b.length)
             case ("OneMax", _) => OneMax.evaluate
             case ("LOLZ", Some(cutoff)) => LOLZ.evaluator(cutoff)
         }
@@ -141,7 +144,7 @@ object JParse {
         val reproductionStrat: (Int => (Phenos => Phenos)) = (p.reproductionStrat, p.epsilon, p.contestants) match {
             case ( "tournament", Some(epsilon), Some(contestants) ) => ParentSelection.tournamentStrat(_, epsilon, contestants)
             case ( "roulette", _, _) => rouletteStrat(_) 
-            case ( "proportional", _, _) => proportional(_) 
+            case ( "sigma", _, _) => sigmaSelect(_) 
             case _ => rouletteStrat(_)
         }
 

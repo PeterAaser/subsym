@@ -35,15 +35,14 @@ object Data {
         val initPop: IndexedSeq[Phenotype[A]],
         val done: Population[A] => Boolean,
         val evolve: Population[A] => Population[A]
-        // val logger: String => Unit,
-        // val writer: java.io.PrintWriter
     ){
         
         def solve: (Population[A], List[(Double, Double)]) =
             run(Population(initPop, 0), List[(Double, Double)]())
 
         def run(p: Population[A], log: List[(Double, Double)] ): (Population[A], List[(Double, Double)]) = {
-            val nextPop = evolve(p)
+            val evolved = evolve(p)
+            val nextPop = evolved.copy(adults = evolved.adults.map(_.reset))
             val finished = done(nextPop)
             val best = nextPop.fittest.trueFitness
             val avg = nextPop.averageFitness

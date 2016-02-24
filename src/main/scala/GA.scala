@@ -22,19 +22,30 @@ import java.io._
 object GAsolver {
 
     def main(args: Array[String]): Unit = {
+        
+        println("Input problem name")
+        val problem = scala.io.StdIn.readLine()
 
-        val p = JParse.parseProblem("om")
-        val logs = p.solve
+        println("running: " + problem)
+        val p = JParse.parseProblem(problem)
 
-        val (avg, best) = logs._2.reverse.unzip
+        val bestData = new XYData()
+        val avgData = new XYData()
 
-        val series = new MemXYSeries((0 until avg.length).map(_.toDouble), avg, "average")
-        val data = new XYData(series)
-        data += new MemXYSeries((0 until best.length).map(_.toDouble), best, "best")
-        val chart = new XYChart("One Max", data)
-        chart.showLegend = true
-        val plotter = new JFGraphPlotter(chart)
-        plotter.gui()
+        for (i <- 0 until 1) {
+            val logs = p.solve
+            val (avg, best) = logs._2.reverse.unzip
+
+            avgData += new MemXYSeries((0 until avg.length).map(_.toDouble), avg, "average")
+            bestData += new MemXYSeries((0 until best.length).map(_.toDouble), best, "best")
+        }
+
+        val bestChart = new XYChart("One Max", bestData)
+        val avgChart = new XYChart("One Max", avgData)
+        val bestPlotter = new JFGraphPlotter(bestChart)
+        val avgPlotter = new JFGraphPlotter(avgChart)
+        bestPlotter.gui()
+        avgPlotter.gui()
     }
 }
 

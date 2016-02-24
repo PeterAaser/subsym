@@ -38,20 +38,28 @@ object Scaling {
     }
 
 
-    // creates a fitness normalizing function from a list of candidates such that the highest has
-    // fitness 1.0
     def normalizer[A <: Genome[A]](candidates: IndexedSeq[Phenotype[A]]): (Double => Double) = {
-
         val fittest = candidates.reduceLeft( (l, r) => if (l.relativeFitness > r.relativeFitness) l else r)
         (relativeFitness => relativeFitness/(fittest.relativeFitness))
     }
 
 
-    // when we measure unfitness we want to promote the least unfit
     def badnessNormalizer[A <: Genome[A]](candidates: IndexedSeq[Phenotype[A]]): (Double => Double) = {
-
         val unfittest = candidates.reduceLeft( (l, r) => if (l.relativeFitness > r.relativeFitness) l else r)
         (relativeFitness => 1.0 - relativeFitness/(unfittest.relativeFitness))
+    }
+
+
+    def rankScale[A <: Genome[A]](generation: Int, candidates: IndexedSeq[Phenotype[A]]): (IndexedSeq[Phenotype[A]]) = {
+        val sorted = candidates.sortBy(_.relativeFitness).zipWithIndex
+        val min = sorted.head._1.relativeFitness 
+        val max = sorted.last._1.relativeFitness 
+        val n = sorted.length
+
+        def rscaler(rank: Int, fitness: Double): Double = {
+            (min + (max - min)*(rank - 1)/(sorted.length - 1))
+        }
+        sorted.map(t => t._1.copy(relativeFitness = rscaler(t._2, t._1.relativeFitness)))
     }
 
 
@@ -146,7 +154,7 @@ object ParentSelection {
         collect(items toVector, sampleSize, Nil)
     }
 
-    def rouletteStrat[A <: Genome[A]](winners: Int): IndexedSeq[Phenotype[A]] => IndexedSeq[Phenotype[A]] =
+    def sigmaSelect[A <: Genome[A]](winners: Int): IndexedSeq[Phenotype[A]] => IndexedSeq[Phenotype[A]] =
         adults => {
             val Snormalizer = normalizer[A](_)
             val Ssigma = sigma[A](_)
@@ -160,10 +168,12 @@ object ParentSelection {
     def tournamentStrat[A <: Genome[A]](winners: Int, epsilon: Double, contestants: Int): (IndexedSeq[Phenotype[A]] => IndexedSeq[Phenotype[A]]) =
         adults => tournamentSelection(adults, winners, epsilon, contestants)
 
-    def proportional[A <: Genome[A]](winners: Int): IndexedSeq[Phenotype[A]] => IndexedSeq[Phenotype[A]] =
+    def rouletteStrat[A <: Genome[A]](winners: Int): IndexedSeq[Phenotype[A]] => IndexedSeq[Phenotype[A]] =
         adults => 
             ParentSelection.rouletteSelection(rouletteScaler(adults))(winners)
         
+
+    // def rankSelection[A <: Genome[A]](winners
 
 }
 

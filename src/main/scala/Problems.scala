@@ -22,8 +22,8 @@ object OneMax {
     def randomEvaluator(l: Int): (SingleBitGenome => Double) = {
         val ideal = Vector.fill(l)(Random.nextInt(2))
         genome => {
-            val hits = (genome.gene.bits zip ideal)
-            ???
+            val hits = (genome.gene.bits zip ideal).map(t => if (t._1 == t._2) 1 else 0)
+            hits.sum.toDouble
         }
     }
 
