@@ -1,0 +1,16 @@
+{
+    "problem": "symbol",
+    "distance": 1,
+    "symbols": 32,
+    "length": 720,
+    "adultPool": 1000,
+    "childPool": 3000,
+    "crossRate": 0.002,
+    "mutationRate": 0.37, 
+    "mutationSeverity": 0.01,
+    "contestants": 16,
+    "epsilon": 0.1, 
+    "generations": 3000,
+    "reproductionStrat": "tournament",
+    "populationStrat": "mixin"
+}

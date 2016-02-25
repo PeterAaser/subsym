@@ -1,5 +1,5 @@
 {
-    "problem": "LOLZ",
+    "problem": "OneMax", 
     "cutoff": 21,
     "distance": "global",
     "symbols": 37,
